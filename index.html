@@ -1363,7 +1363,7 @@
 <header>
   <div class="logo">
     <div class="logo-mark">STRIKE WINDOW</div>
-    <div class="logo-sub">Tactical Offshore Intelligence // Sydney</div>
+    <div class="logo-sub">Offshore Conditions // Sydney</div>
   </div>
   <div class="header-status">
     <div class="status-pill">
@@ -1443,21 +1443,21 @@
 
     <!-- Live Data Status -->
     <div class="panel-section" id="dataStatusSection">
-      <div class="section-label">Data sources</div>
+      <div class="section-label">Where we're pulling from</div>
       <div id="dataSourcesList">
         <div class="fetch-row">
           <span class="fetch-icon">◈</span>
-          <span>Open-Meteo Marine API</span>
+          <span>Swell &amp; sea state (Open-Meteo)</span>
           <span class="fetch-status" id="src-marine">—</span>
         </div>
         <div class="fetch-row">
           <span class="fetch-icon">◈</span>
-          <span>Open-Meteo Forecast</span>
+          <span>Wind forecast (Open-Meteo)</span>
           <span class="fetch-status" id="src-wind">—</span>
         </div>
         <div class="fetch-row">
           <span class="fetch-icon">◈</span>
-          <span>Open-Meteo SST / Currents</span>
+          <span>SST &amp; currents (Open-Meteo)</span>
           <span class="fetch-status" id="src-copernicus">—</span>
         </div>
         <div class="fetch-row">
@@ -1495,7 +1495,7 @@
         <div class="live-metric">
           <div class="live-metric-label">SSH</div>
           <div class="live-metric-value" id="m-ssh">—</div>
-          <div class="live-metric-unit">m anomaly</div>
+          <div class="live-metric-unit">eddy height</div>
         </div>
         <div class="live-metric">
           <div class="live-metric-label">Water Temp</div>
@@ -1510,7 +1510,7 @@
       <div class="section-label">Decision matrix</div>
       <div class="pillar" id="p-access">
         <div class="pillar-header">
-          <span class="pillar-name">01 — Access</span>
+          <span class="pillar-name">01 — Bar &amp; sea state</span>
           <span class="pillar-score" id="ps-access">0/3</span>
         </div>
         <div class="pillar-bar-track"><div class="pillar-bar-fill score-0" id="pb-access" style="width:0%"></div></div>
@@ -1518,7 +1518,7 @@
       </div>
       <div class="pillar" id="p-sst">
         <div class="pillar-header">
-          <span class="pillar-name">02 — SST Gradient</span>
+          <span class="pillar-name">02 — Water temp &amp; colour</span>
           <span class="pillar-score" id="ps-sst">0/3</span>
         </div>
         <div class="pillar-bar-track"><div class="pillar-bar-fill score-0" id="pb-sst" style="width:0%"></div></div>
@@ -1526,7 +1526,7 @@
       </div>
       <div class="pillar" id="p-alt">
         <div class="pillar-header">
-          <span class="pillar-name">03 — Altimetry</span>
+          <span class="pillar-name">03 — Warm core eddy</span>
           <span class="pillar-score" id="ps-alt">0/3</span>
         </div>
         <div class="pillar-bar-track"><div class="pillar-bar-fill score-0" id="pb-alt" style="width:0%"></div></div>
@@ -1534,7 +1534,7 @@
       </div>
       <div class="pillar" id="p-eac">
         <div class="pillar-header">
-          <span class="pillar-name">04 — EAC Velocity</span>
+          <span class="pillar-name">04 — Current &amp; structure</span>
           <span class="pillar-score" id="ps-eac">0/3</span>
         </div>
         <div class="pillar-bar-track"><div class="pillar-bar-fill score-0" id="pb-eac" style="width:0%"></div></div>
@@ -1700,7 +1700,7 @@
       <div class="briefing-idle" id="briefingIdle">
         <div class="briefing-idle-icon">◈</div>
         <h3>No assessment generated</h3>
-        <p>Fetch live data then hit "Run Analysis" to generate your tactical brief. Add skipper intel to improve the assessment.</p>
+        <p>Hit Fetch, then Run Analysis. Add what you know from the water to sharpen the call.</p>
       </div>
       <div class="briefing-output" id="briefingOutput">
         <div class="brief-section">
@@ -2323,10 +2323,10 @@ function setSpecies(speciesKey, btn) {
   document.getElementById('speciesTagline').textContent = sp.tagline;
 
   // Update pillar labels in the decision matrix
-  document.querySelector('#p-access .pillar-name').textContent  = '01 — Access';
-  document.querySelector('#p-sst .pillar-name').textContent     = speciesKey === 'snapper' ? '02 — Water Temp' : '02 — SST Gradient';
-  document.querySelector('#p-alt .pillar-name').textContent     = '03 — ' + (speciesKey === 'snapper' ? 'Tide Phase' : 'Altimetry');
-  document.querySelector('#p-eac .pillar-name').textContent     = '04 — ' + (speciesKey === 'snapper' ? 'Structure/Bait' : speciesKey === 'mahi' ? 'Current Lines' : 'EAC Velocity');
+  document.querySelector('#p-access .pillar-name').textContent  = '01 — Bar & sea state';
+  document.querySelector('#p-sst .pillar-name').textContent     = speciesKey === 'snapper' ? '02 — Water temp' : '02 — Water temp & colour';
+  document.querySelector('#p-alt .pillar-name').textContent     = '03 — ' + (speciesKey === 'snapper' ? 'Tide phase' : 'Warm core eddy');
+  document.querySelector('#p-eac .pillar-name').textContent     = '04 — ' + (speciesKey === 'snapper' ? 'Structure & bait' : speciesKey === 'mahi' ? 'Current lines' : 'Current & structure');
 
   // Update default gap in fuel calculator
   const gapInput = document.getElementById('gapDistance');
@@ -2361,31 +2361,31 @@ function scoreMatrix() {
   const wind = d.wind, swell = parseFloat(d.swell);
   // Snapper: anchoring in >15kt is miserable, >18kt is dangerous
   if (currentSpecies === 'snapper') {
-    if (wind <= 12 && swell <= 1.2)       { access = 3; accessNote = `${wind}kt / ${swell}m — ideal anchor/drift conditions.`; }
-    else if (wind <= 15 && swell <= 1.5)  { access = 2; accessNote = `${wind}kt / ${swell}m — workable for anchoring. Monitor.`; }
-    else if (wind <= 18 && swell <= 2.0)  { access = 1; accessNote = `${wind}kt / ${swell}m — rough for anchoring. Crew call.`; }
-    else                                  { access = 0; accessNote = `${wind}kt / ${swell}m — too rough to anchor on structure. Stay home.`; }
+    if (wind <= 12 && swell <= 1.2)       { access = 3; accessNote = `${wind}kt and ${swell}m — good day to anchor up. Comfortable.`; }
+    else if (wind <= 15 && swell <= 1.5)  { access = 2; accessNote = `${wind}kt and ${swell}m — you can anchor but it won't be flat. Keep an eye on it.`; }
+    else if (wind <= 18 && swell <= 2.0)  { access = 1; accessNote = `${wind}kt and ${swell}m — tough day to sit anchored. Crew call.`; }
+    else                                  { access = 0; accessNote = `${wind}kt and ${swell}m — too rough to anchor safely. Not today.`; }
   } else {
-    if (wind <= windMax && swell <= swellMax)              { access = 3; accessNote = `${wind}kt / ${swell}m — ideal window.`; }
-    else if (wind <= windMax+3 && swell <= swellMax+0.5)   { access = 2; accessNote = `${wind}kt / ${swell}m — marginal but workable. Monitor.`; }
-    else if (wind <= windMax+6 && swell <= swellMax+1.0)   { access = 1; accessNote = `${wind}kt / ${swell}m — uncomfortable. Crew call.`; }
-    else                                                    { access = 0; accessNote = `${wind}kt / ${swell}m — unacceptable. Stay home.`; }
+    if (wind <= windMax && swell <= swellMax)              { access = 3; accessNote = `${wind}kt and ${swell}m — bar's open, conditions are good. Get out there.`; }
+    else if (wind <= windMax+3 && swell <= swellMax+0.5)   { access = 2; accessNote = `${wind}kt and ${swell}m — doable but watch it. Check the bar report before you leave.`; }
+    else if (wind <= windMax+6 && swell <= swellMax+1.0)   { access = 1; accessNote = `${wind}kt and ${swell}m — it's rough. Honest crew call — not everyone's going to enjoy this.`; }
+    else                                                    { access = 0; accessNote = `${wind}kt and ${swell}m — leave her on the trailer. Not safe.`; }
   }
 
   // Pillar 2: SST / Temp
   let sst = 0, sstNote = '';
   if (currentSpecies === 'snapper') {
     const temp = d.sst_warm;
-    if (temp >= 16 && temp <= 20)      { sst = 3; sstNote = `${temp}°C — ideal snapper temp range.`; }
-    else if (temp >= 14 && temp <= 22) { sst = 2; sstNote = `${temp}°C — acceptable for snapper, not ideal.`; }
-    else                               { sst = 1; sstNote = `${temp}°C — outside snapper preference. Fish are present but less active.`; }
+    if (temp >= 16 && temp <= 20)      { sst = 3; sstNote = `${temp}°C — sweet spot for snapper. Water's the right temperature.`; }
+    else if (temp >= 14 && temp <= 22) { sst = 2; sstNote = `${temp}°C — snapper will be there, just not at their most active.`; }
+    else                               { sst = 1; sstNote = `${temp}°C — a bit warm for snapper. They're there but sluggish.`; }
   } else {
     const delta = d.sst_delta;
     const warmOk = d.sst_warm >= sp.sstWarmMin;
-    if (warmOk && delta >= sp.sstDeltaIdeal)    { sst = 3; sstNote = `${d.sst_warm}°C vs ${d.sst_cold}°C — ${delta.toFixed(1)}° wall confirmed.`; }
-    else if (warmOk && delta >= sp.sstDeltaMin) { sst = 2; sstNote = `${d.sst_warm}°C vs ${d.sst_cold}°C — ${delta.toFixed(1)}° soft gradient.`; }
-    else if (delta >= sp.sstDeltaMin)           { sst = 1; sstNote = `Temp marginal for ${sp.name} — need ${sp.sstWarmMin}°C+.`; }
-    else                                        { sst = 0; sstNote = `SST below ${sp.name} threshold.`; }
+    if (warmOk && delta >= sp.sstDeltaIdeal)    { sst = 3; sstNote = `${d.sst_warm}°C meets ${d.sst_cold}°C — ${delta.toFixed(1)}° colour change. That's your edge, fish it.`; }
+    else if (warmOk && delta >= sp.sstDeltaMin) { sst = 2; sstNote = `${d.sst_warm}°C offshore, ${d.sst_cold}°C inshore — ${delta.toFixed(1)}° gradient. Soft edge, worth a look but not a hard wall.`; }
+    else if (delta >= sp.sstDeltaMin)           { sst = 1; sstNote = `${d.sst_warm}°C — a touch cool for ${sp.name}. Looking for ${sp.sstWarmMin}°C+ to fire them up.`; }
+    else                                        { sst = 0; sstNote = `${d.sst_warm}°C — water's too cold for ${sp.name}. Need ${sp.sstWarmMin}°C+ to find fish.`; }
   }
 
   // Pillar 3: Altimetry / Tide
@@ -2405,13 +2405,13 @@ function scoreMatrix() {
     const ssh = d.ssh;
     if (ssh >= 15)     { alt = 3; altNote = `+${ssh.toFixed(0)}cm — current lines and debris aggregation likely.`; }
     else if (ssh >= 8) { alt = 2; altNote = `+${ssh.toFixed(0)}cm — some current structure present.`; }
-    else               { alt = 1; altNote = `SSH flat — debris lines may be absent. Visual search required.`; }
+    else               { alt = 1; altNote = `Eddy height flat — current lines may not be forming. You'll need to search visually.`; }
   } else {
     const ssh = d.ssh;
-    if (ssh >= 20 && ssh <= 45)  { alt = 3; altNote = `+${ssh.toFixed(0)}cm SSH anomaly — WCE geometry confirmed.`; }
-    else if (ssh >= 10)          { alt = 2; altNote = `+${ssh.toFixed(0)}cm — weak WCE present. Sub-optimal.`; }
+    if (ssh >= 20 && ssh <= 45)  { alt = 3; altNote = `+${ssh.toFixed(0)}cm eddy height — solid warm core eddy. This is the structure you're looking for.`; }
+    else if (ssh >= 10)          { alt = 2; altNote = `+${ssh.toFixed(0)}cm eddy height — structure's there but soft. Not the hard wall you want. Worth watching if it tightens.`; }
     else if (ssh > 45)           { alt = 2; altNote = `+${ssh.toFixed(0)}cm — strong WCE, verify shelf position.`; }
-    else                         { alt = 0; altNote = `SSH flat. No WCE structure.`; }
+    else                         { alt = 0; altNote = `Eddy height flat — no warm core structure out there. EAC is running straight.`; }
   }
 
   // Pillar 4: EAC / Current / Structure
@@ -2429,11 +2429,11 @@ function scoreMatrix() {
     else if (eacSpd >= 1.0) { eac = 2; eacNote = `${eacSpd}kt — some current structure. Search weed lines visually.`; }
     else                    { eac = 1; eacNote = `Weak current — debris aggregation unlikely. Cover water.`; }
   } else {
-    if (eacSpd >= 2 && onStructure === 'yes')           { eac = 3; eacNote = `${eacSpd}kt EAC confirmed on structure. Bait pinning active.`; }
-    else if (eacSpd >= 2 || onStructure === 'partial')  { eac = 2; eacNote = `${eacSpd}kt EAC present. Partial structure contact.`; }
-    else if (eacSpd >= 1.5)                             { eac = 2; eacNote = `${eacSpd}kt EAC flow. Verify structure contact.`; }
-    else if (eacSpd >= 1)                               { eac = 1; eacNote = `${eacSpd}kt — weak push. Insufficient to pin bait.`; }
-    else                                                { eac = 0; eacNote = `EAC absent. No concentrating mechanism.`; }
+    if (eacSpd >= 2 && onStructure === 'yes')           { eac = 3; eacNote = `EAC locked on at ${eacSpd}kt — current's hugging the shelf and pinning bait. This is what you want.`; }
+    else if (eacSpd >= 2 || onStructure === 'partial')  { eac = 2; eacNote = `EAC running at ${eacSpd}kt — current's there but not hugging the shelf the way you want. Bait aggregation unlikely.`; }
+    else if (eacSpd >= 1.5)                             { eac = 2; eacNote = `EAC at ${eacSpd}kt — current's running but check if it's on the shelf edge. May need to hunt the colour change.`; }
+    else if (eacSpd >= 1)                               { eac = 1; eacNote = `EAC at ${eacSpd}kt — weak. Won't be stacking bait the way you want.`; }
+    else                                                { eac = 0; eacNote = `EAC flat — nothing to concentrate bait or fish. Tough day offshore.`; }
   }
 
   // Intel modifiers
@@ -2514,7 +2514,7 @@ function updateVerdict() {
   } else {
     banner.classList.add('state-nogo');
     callEl.textContent = 'PULL THE PIN';
-    subEl.textContent = `Score ${total}/12 does not support the run. Preserve the asset. Reforecast in 48hrs.`;
+    subEl.textContent = `Score ${total}/12 — not worth the fuel. Leave her on the trailer and check back in 48hrs.`;
   }
 }
 
@@ -2950,7 +2950,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   const intelNotes = [];
   if (bait === 'heavy')    intelNotes.push('Heavy bait activity reported — strong aggregation signal.');
   if (bait === 'moderate') intelNotes.push('Moderate bait present — fish will be around but may be scattered.');
-  if (bait === 'none')     intelNotes.push('No bait observed — concentrating mechanism absent.');
+  if (bait === 'none')     intelNotes.push('No bait reported — fish won\'t be stacked. May need to cover more ground.');
   if (colour === 'hard-wall') intelNotes.push('Hard colour change confirmed by skipper — isotherm wall is real.');
   if (colour === 'soft')      intelNotes.push('Soft colour change visible — gradient exists but diffuse.');
   if (reports === 'red-hot')  intelNotes.push('Trip reports: Red hot. Fish are on top and biting.');
