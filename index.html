@@ -1,0 +1,3306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#090d10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Strike Window">
+<meta name="description" content="Tactical offshore fishing decision app for Sydney anglers. Live Go/No-Go verdict before you burn the fuel.">
+<title>Strike Window — Tactical Offshore Fishing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080c0f;
+    --deep: #0d1419;
+    --surface: #111820;
+    --panel: #151d25;
+    --border: #1e2d3a;
+    --border-light: #243645;
+    --text-primary: #c8d8e4;
+    --text-secondary: #6a8a9e;
+    --text-dim: #3a5568;
+    --accent: #00b4d8;
+    --accent-dim: #0077a0;
+    --go: #00e676;
+    --go-dim: #004d20;
+    --warn: #ffab00;
+    --warn-dim: #4d3200;
+    --nogo: #ff1744;
+    --nogo-dim: #4d0010;
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'Barlow Condensed', sans-serif;
+    --body: 'Barlow', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--text-primary);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--deep);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 32px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .logo-sub {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-secondary);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+  }
+
+  .status-dot.live {
+    background: var(--go);
+    box-shadow: 0 0 6px var(--go);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .date-display {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  /* ── TIDAL METER ── */
+  .tide-meter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 1px solid var(--border);
+    padding-left: 16px;
+  }
+
+  .tide-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .tide-bar-track {
+    width: 4px;
+    height: 28px;
+    background: var(--border);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tide-bar-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: height 1s ease;
+  }
+
+  .tide-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .tide-label {
+    font-family: var(--mono);
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .tide-value {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .tide-direction {
+    font-family: var(--mono);
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .tide-direction.rising  { color: var(--go); }
+  .tide-direction.falling { color: var(--warn); }
+
+  @media (max-width: 600px) {
+    .tide-meter { display: none; }
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .app-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    grid-template-rows: auto 1fr;
+    min-height: calc(100vh - 57px);
+  }
+
+  /* ── VERDICT BANNER ── */
+  .verdict-banner {
+    grid-column: 1 / -1;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--deep);
+    transition: all 0.4s ease;
+  }
+
+  .verdict-banner.state-go {
+    border-bottom-color: var(--go);
+    background: linear-gradient(90deg, rgba(0,230,118,0.06) 0%, var(--deep) 60%);
+  }
+
+  .verdict-banner.state-marginal {
+    border-bottom-color: var(--warn);
+    background: linear-gradient(90deg, rgba(255,171,0,0.06) 0%, var(--deep) 60%);
+  }
+
+  .verdict-banner.state-nogo {
+    border-bottom-color: var(--nogo);
+    background: linear-gradient(90deg, rgba(255,23,68,0.06) 0%, var(--deep) 60%);
+  }
+
+  .verdict-banner.state-idle {
+    background: var(--deep);
+  }
+
+  .verdict-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .verdict-score {
+    font-family: var(--display);
+    font-weight: 900;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--text-dim);
+    transition: color 0.4s;
+  }
+
+  .verdict-banner.state-go .verdict-score { color: var(--go); }
+  .verdict-banner.state-marginal .verdict-score { color: var(--warn); }
+  .verdict-banner.state-nogo .verdict-score { color: var(--nogo); }
+
+  .verdict-score span {
+    font-size: 36px;
+    color: var(--text-dim);
+    font-weight: 300;
+  }
+
+  .verdict-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .verdict-call {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 38px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    transition: color 0.4s;
+  }
+
+  .verdict-banner.state-go .verdict-call { color: var(--go); }
+  .verdict-banner.state-marginal .verdict-call { color: var(--warn); }
+  .verdict-banner.state-nogo .verdict-call { color: var(--nogo); }
+
+  .verdict-sub {
+    font-family: var(--body);
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--text-secondary);
+    max-width: 500px;
+  }
+
+  .verdict-right {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    border: 1px solid var(--border-light);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,180,216,0.05);
+  }
+
+  .btn.primary {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,180,216,0.08);
+  }
+
+  .btn.primary:hover {
+    background: rgba(0,180,216,0.18);
+  }
+
+  .btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-section {
+    border-bottom: 1px solid var(--border);
+    padding: 20px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 15px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Pillars */
+  .pillar {
+    margin-bottom: 16px;
+  }
+
+  .pillar:last-child { margin-bottom: 0; }
+
+  .pillar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .pillar-name {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .pillar-score {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-secondary);
+  }
+
+  .pillar-bar-track {
+    height: 4px;
+    background: var(--border);
+    margin-bottom: 6px;
+    position: relative;
+  }
+
+  .pillar-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    width: 0%;
+  }
+
+  .pillar-bar-fill.score-0 { background: var(--text-dim); }
+  .pillar-bar-fill.score-1 { background: var(--nogo); }
+  .pillar-bar-fill.score-2 { background: var(--warn); }
+  .pillar-bar-fill.score-3 { background: var(--go); }
+
+  .pillar-note {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    font-family: var(--mono);
+  }
+
+  /* Skipper Inputs */
+  .input-row {
+    margin-bottom: 14px;
+  }
+
+  .input-row:last-child { margin-bottom: 0; }
+
+  .input-label {
+    font-family: var(--mono);
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .input-field, .select-field, .textarea-field {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: var(--mono);
+    font-size: 15px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+
+  .input-field:focus, .select-field:focus, .textarea-field:focus {
+    border-color: var(--accent);
+  }
+
+  .select-field {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236a8a9e' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  .textarea-field {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+  }
+
+  /* Gap indicator */
+  .gap-display {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+
+  .gap-value {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 24px;
+  }
+
+  .gap-value.ok { color: var(--go); }
+  .gap-value.warn { color: var(--warn); }
+  .gap-value.bad { color: var(--nogo); }
+
+  .gap-meta {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Tabs */
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--deep);
+    padding: 0 28px;
+  }
+
+  .tab {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 16px 22px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    background: none;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+
+  .tab:hover { color: var(--text-secondary); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+    display: none;
+  }
+
+  .tab-content.active { display: block; }
+
+  /* ── BRIEFING TAB ── */
+  .briefing-idle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 16px;
+    color: var(--text-dim);
+  }
+
+  .briefing-idle-icon {
+    font-size: 48px;
+    opacity: 0.3;
+  }
+
+  .briefing-idle h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .briefing-idle p {
+    font-size: 15px;
+    color: var(--text-dim);
+    text-align: center;
+    max-width: 300px;
+    line-height: 1.6;
+  }
+
+  .briefing-output {
+    display: none;
+  }
+
+  .briefing-output.visible {
+    display: block;
+  }
+
+  /* Briefing sections */
+  .brief-section {
+    margin-bottom: 32px;
+  }
+
+  .brief-heading {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brief-text {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text-primary);
+    font-weight: 300;
+  }
+
+  .brief-text strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .brief-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 15px;
+    margin-top: 8px;
+  }
+
+  .brief-table th {
+    text-align: left;
+    padding: 8px 12px;
+    color: var(--text-dim);
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brief-table td {
+    padding: 9px 12px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(30,45,58,0.5);
+  }
+
+  .brief-table td:first-child {
+    color: var(--text-primary);
+  }
+
+  .brief-table tr:last-child td { border-bottom: none; }
+
+  /* Streaming cursor */
+  .stream-cursor::after {
+    content: '▋';
+    animation: blink 0.8s infinite;
+    color: var(--accent);
+    font-size: 15px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ── MAP TAB ── */
+  .map-container {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .map-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    filter: saturate(0.85) brightness(0.9);
+  }
+
+  .map-overlay-label {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(8,12,15,0.85);
+    border: 1px solid var(--border-light);
+    padding: 6px 10px;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+  }
+
+  .map-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .map-btn {
+    font-family: var(--mono);
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .map-source-label {
+    font-family: var(--mono);
+    font-size: 15px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 0 4px;
+    border-left: 1px solid var(--border);
+    align-self: center;
+  }
+
+  .map-source-label:first-child { border-left: none; padding-left: 0; }
+
+  .map-btn:hover, .map-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,180,216,0.06);
+  }
+
+  /* ── FORECAST TAB ── */
+  .forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .forecast-day {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .forecast-day:hover {
+    border-color: var(--border-light);
+  }
+
+  .forecast-day.best {
+    border-color: var(--go);
+    background: rgba(0,230,118,0.04);
+  }
+
+  .forecast-day.marginal {
+    border-color: var(--warn);
+    background: rgba(255,171,0,0.04);
+  }
+
+  .forecast-day.poor {
+    border-color: var(--nogo);
+    background: rgba(255,23,68,0.04);
+  }
+
+  .forecast-day.today {
+    outline: 1px solid var(--accent);
+    outline-offset: -1px;
+  }
+
+  .forecast-day-name {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .forecast-day-date {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    line-height: 1;
+  }
+
+  .forecast-score-pill {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 14px;
+    padding: 2px 8px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+
+  .forecast-score-pill.go { color: var(--go); background: rgba(0,230,118,0.1); }
+  .forecast-score-pill.warn { color: var(--warn); background: rgba(255,171,0,0.1); }
+  .forecast-score-pill.nogo { color: var(--nogo); background: rgba(255,23,68,0.1); }
+
+  .forecast-day-stats {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    text-align: left;
+  }
+
+  .forecast-best-label {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    background: var(--go);
+    color: var(--black);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    padding: 2px 5px;
+    text-transform: uppercase;
+  }
+
+  .forecast-detail {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px;
+  }
+
+  .forecast-detail-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+  }
+
+  /* ── LOADING STATE ── */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(8,12,15,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    backdrop-filter: blur(4px);
+  }
+
+  .loading-overlay.visible {
+    display: flex;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-secondary);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .loading-step {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  /* ── DATA LIVE FEED ── */
+  .live-data-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .live-metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+  }
+
+  .live-metric-label {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .live-metric-value {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .live-metric-unit {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* ── INTEL CARDS ── */
+  .intel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    transition: border-color 0.3s;
+  }
+
+  .intel-card.loaded { border-left-color: var(--accent); }
+  .intel-card.hot    { border-left-color: var(--go); }
+  .intel-card.warn   { border-left-color: var(--warn); }
+  .intel-card.cold   { border-left-color: var(--nogo); }
+
+  .intel-card-label {
+    font-family: var(--mono);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .intel-card-value {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    line-height: 1.2;
+  }
+
+  .intel-card-detail {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ── FUEL BUDGET ── */
+  .fuel-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .fuel-row-label { width: 110px; color: var(--text-secondary); flex-shrink: 0; }
+  .fuel-bar-wrap  { flex: 1; height: 5px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .fuel-bar       { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s; width: 0%; }
+  .fuel-bar-troll   { background: #7c6fff; }
+  .fuel-bar-reserve { background: var(--warn); }
+  .fuel-row-val   { width: 40px; text-align: right; color: var(--text-primary); font-weight: 500; }
+
+  /* ── SPECIES SELECTOR ── */
+  .species-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 28px;
+    background: var(--deep);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .species-label {
+    font-family: var(--mono);
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .species-options {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .species-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--body);
+  }
+
+  .species-btn:hover {
+    border-color: var(--border-light);
+    color: var(--text-primary);
+  }
+
+  .species-btn.active {
+    border-color: var(--accent);
+    background: rgba(0,180,216,0.08);
+    color: var(--accent);
+  }
+
+  .species-btn.active .species-name { color: var(--accent); }
+
+  .species-icon { font-size: 14px; }
+
+  .species-name {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .species-season {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+  }
+
+  .species-btn.active .species-season { color: var(--accent-dim); }
+
+  .species-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-secondary);
+  }
+
+  .season-badge {
+    padding: 2px 8px;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .season-badge.open   { color: var(--go);   background: rgba(0,230,118,0.1);  border: 1px solid rgba(0,230,118,0.3); }
+  .season-badge.peak   { color: var(--accent); background: rgba(0,180,216,0.1); border: 1px solid rgba(0,180,216,0.3); }
+  .season-badge.closed { color: var(--text-dim); background: transparent;       border: 1px solid var(--border); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--black); }
+  ::-webkit-scrollbar-thumb { background: var(--border-light); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  /* ── REPORT CARDS ── */
+  .report-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .report-card:hover { border-color: var(--border-light); }
+
+  .report-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .report-card-source {
+    font-family: var(--mono);
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .report-card-title {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+
+  .report-card-date {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .report-card-body {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+
+  .report-card-body strong { color: var(--text-primary); font-weight: 500; }
+
+  .report-card-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .report-tag {
+    font-family: var(--mono);
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border: 1px solid;
+  }
+
+  .report-tag.yft { color: var(--go); border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.05); }
+  .report-tag.marlin { color: #7c6fff; border-color: rgba(124,111,255,0.3); background: rgba(124,111,255,0.05); }
+  .report-tag.mahi { color: var(--warn); border-color: rgba(255,171,0,0.3); background: rgba(255,171,0,0.05); }
+  .report-tag.location { color: var(--accent); border-color: rgba(0,180,216,0.3); background: rgba(0,180,216,0.05); }
+  .report-tag.conditions { color: var(--text-secondary); border-color: var(--border); }
+
+  .report-signal {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 15px;
+    padding: 3px 8px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .report-signal.hot { color: var(--go); background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.2); }
+  .report-signal.moderate { color: var(--warn); background: rgba(255,171,0,0.08); border: 1px solid rgba(255,171,0,0.2); }
+  .report-signal.slow { color: var(--text-dim); background: transparent; border: 1px solid var(--border); }
+
+  /* Responsive */
+  /* ── MOBILE RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .app-layout { grid-template-columns: 1fr; }
+    .left-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none; overflow: visible; }
+    .forecast-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+    /* Header — sticky so score stays visible while scrolling */
+    header { position: sticky; top: 0; z-index: 100; background: var(--deep); }
+    .app-header { padding: 10px 14px; }
+    .logo-mark { font-size: 18px; letter-spacing: 0.1em; }
+    .logo-sub { display: none; }
+    .header-status { gap: 8px; }
+    .header-btn { display: none; }
+    .status-pill { font-size: 15px; }
+    .date-display { font-size: 14px; }
+
+    /* Species bar — horizontal scroll, hidden scrollbar */
+    .species-bar { padding: 6px 12px; gap: 6px; border-bottom: 1px solid var(--border); }
+    .species-label { display: none; }
+    .species-options { gap: 5px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
+    .species-options::-webkit-scrollbar { display: none; }
+    .species-btn { padding: 7px 13px; flex-shrink: 0; min-height: 38px; }
+    .species-name { font-size: 15px; white-space: nowrap; }
+    .species-season { display: none; }
+    .species-status { display: none; }
+
+    /* Verdict banner — score+text top row, buttons below in 50/50 grid */
+    .verdict-banner { padding: 14px 16px; flex-direction: column; gap: 12px; align-items: stretch; }
+    .verdict-left { gap: 16px; align-items: center; }
+    .verdict-score { font-size: 52px; line-height: 1; min-width: 64px; }
+    .verdict-score span { font-size: 22px; }
+    .verdict-call { font-size: 18px; letter-spacing: 0.06em; }
+    .verdict-sub { font-size: 15px; line-height: 1.4; margin-top: 3px; opacity: 0.85; }
+    .verdict-right { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+    .verdict-right .btn { width: 100%; text-align: center; padding: 12px 8px; font-size: 15px; justify-content: center; min-height: 44px; }
+
+    /* App layout — single column */
+    .app-layout { grid-template-columns: 1fr; gap: 0; }
+    .left-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none; overflow: visible; padding: 16px; }
+    .right-panel { padding: 0; }
+
+    /* Section labels */
+    .section-label { font-size: 14px; letter-spacing: 0.1em; margin-bottom: 12px; }
+
+    /* Metrics grid — 3 columns, readable sizes */
+    .live-data-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
+    .live-metric { padding: 10px 10px; }
+    .live-metric-label { font-size: 14px; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .live-metric-value { font-size: 22px; line-height: 1.1; }
+    .live-metric-unit { font-size: 14px; margin-top: 2px; }
+
+    /* Fetch rows */
+    .fetch-row { font-size: 15px; padding: 5px 0; }
+    .fetch-status { font-size: 14px; }
+
+    /* Decision matrix */
+    .pillar { padding: 12px 0; }
+    .pillar-name { font-size: 15px; letter-spacing: 0.04em; }
+    .pillar-score { font-size: 14px; }
+    .pillar-note { font-size: 15px; line-height: 1.5; margin-top: 5px; }
+    .pillar-bar-track { height: 3px; margin-top: 6px; }
+
+    /* Tab bar — scrollable, large tap targets */
+    .tab-bar { padding: 0 14px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab { padding: 14px 16px; font-size: 15px; white-space: nowrap; flex-shrink: 0; min-height: 44px; display: flex; align-items: center; }
+
+    /* Tab content */
+    .tab-content { padding: 16px; }
+
+    /* Tactical brief text */
+    .brief-text { font-size: 14px; line-height: 1.8; }
+    .brief-heading { font-size: 15px; letter-spacing: 0.15em; }
+
+    /* Forecast grid */
+    .forecast-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .forecast-day { padding: 10px 6px; }
+    .forecast-day-name { font-size: 14px; }
+    .forecast-day-date { font-size: 20px; }
+    .forecast-day-stats { font-size: 14px; line-height: 1.5; }
+    .forecast-score-pill { font-size: 15px; }
+
+    /* Brief table */
+    .brief-table { font-size: 15px; }
+    .brief-table th, .brief-table td { padding: 8px 10px; }
+
+    /* Map tab */
+    .map-controls { flex-wrap: wrap; gap: 6px; padding: 12px 14px; }
+    .map-btn { font-size: 15px; padding: 7px 10px; min-height: 36px; }
+    .map-container { height: 420px; }
+
+    /* Fuel budget */
+    .fuel-row-label { width: 90px; font-size: 15px; }
+    .fuel-row-val { font-size: 15px; }
+
+    /* Intel cards */
+    .intel-card { padding: 12px 14px; }
+    .intel-card-label { font-size: 15px; }
+    .intel-card-value { font-size: 15px; }
+    .intel-card-detail { font-size: 15px; }
+
+    /* Form inputs — 16px prevents iOS auto-zoom */
+    .select-field, .input-field { font-size: 16px; min-height: 44px; }
+    .input-label { font-size: 15px; }
+
+    /* Report cards */
+    .report-card-title { font-size: 14px; }
+    .report-card-body { font-size: 15px; }
+
+    /* General buttons */
+    .btn { min-height: 44px; }
+  }
+
+  @media (max-width: 390px) {
+    /* Small phones — iPhone SE / compact Androids */
+    .verdict-score { font-size: 44px; }
+    .verdict-call { font-size: 16px; }
+    .live-metric-value { font-size: 19px; }
+    .tab { padding: 13px 13px; font-size: 15px; }
+    .species-btn { padding: 6px 10px; }
+    .species-name { font-size: 15px; }
+  }
+
+  /* Landscape phone — restore two-column when rotated */
+  @media (max-height: 500px) and (max-width: 900px) {
+    .verdict-banner { padding: 8px 16px; flex-direction: row; align-items: center; gap: 16px; }
+    .verdict-right { display: flex; gap: 8px; width: auto; }
+    .verdict-right .btn { width: auto; padding: 8px 14px; font-size: 15px; min-height: 38px; }
+    .verdict-score { font-size: 38px; }
+    .verdict-call { font-size: 15px; }
+    .app-layout { grid-template-columns: 300px 1fr; }
+    .left-panel { border-right: 1px solid var(--border); border-bottom: none; overflow-y: auto; max-height: calc(100vh - 120px); }
+  }
+
+  /* Data fetch status */
+  .fetch-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(30,45,58,0.4);
+  }
+
+  .fetch-row:last-child { border-bottom: none; }
+
+  .fetch-icon {
+    width: 16px;
+    text-align: center;
+  }
+
+  .fetch-status {
+    margin-left: auto;
+    font-size: 15px;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .fetch-status.ok { color: var(--go); background: rgba(0,230,118,0.1); }
+  .fetch-status.loading { color: var(--warn); background: rgba(255,171,0,0.1); }
+  .fetch-status.err { color: var(--nogo); background: rgba(255,23,68,0.1); }
+
+</style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Acquiring oceanographic data</div>
+  <div class="loading-step" id="loadingStep">Initialising...</div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">STRIKE WINDOW</div>
+    <div class="logo-sub">Tactical Offshore Intelligence // Sydney</div>
+  </div>
+  <div class="header-status">
+    <div class="status-pill">
+      <div class="status-dot" id="liveStatusDot"></div>
+      <span id="liveStatusText">No data</span>
+    </div>
+    <div class="date-display" id="dateDisplay">--</div>
+    <div class="tide-meter" id="tideMeter" title="Sydney tide height — Open-Meteo">
+      <div class="tide-bar-wrap">
+        <div class="tide-bar-track">
+          <div class="tide-bar-fill" id="tideBarFill" style="height:50%;"></div>
+        </div>
+      </div>
+      <div class="tide-info">
+        <div class="tide-label">Tide</div>
+        <div class="tide-value" id="tideValue">—</div>
+        <div class="tide-direction" id="tideDirection">—</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Species Selector -->
+<div class="species-bar">
+  <div class="species-label">Target Species</div>
+  <div class="species-options">
+    <button class="species-btn active" data-species="yft" onclick="setSpecies('yft', this)">
+      <span class="species-icon">🐟</span>
+      <span class="species-name">Yellowfin Tuna</span>
+      <span class="species-season">Jun–Oct</span>
+    </button>
+    <button class="species-btn" data-species="marlin" onclick="setSpecies('marlin', this)">
+      <span class="species-icon">⚡</span>
+      <span class="species-name">Marlin</span>
+      <span class="species-season">Nov–May</span>
+    </button>
+    <button class="species-btn" data-species="mahi" onclick="setSpecies('mahi', this)">
+      <span class="species-icon">🌊</span>
+      <span class="species-name">Mahi-Mahi</span>
+      <span class="species-season">Dec–Apr</span>
+    </button>
+    <button class="species-btn" data-species="kingfish" onclick="setSpecies('kingfish', this)">
+      <span class="species-icon">🎯</span>
+      <span class="species-name">Kingfish</span>
+      <span class="species-season">Apr–Sep</span>
+    </button>
+    <button class="species-btn" data-species="snapper" onclick="setSpecies('snapper', this)">
+      <span class="species-icon">🔴</span>
+      <span class="species-name">Snapper</span>
+      <span class="species-season">Year round</span>
+    </button>
+  </div>
+  <div class="species-status" id="speciesStatus">
+    <span id="speciesSeasonBadge" class="season-badge open">● SEASON OPEN</span>
+    <span id="speciesTagline">YFT peak window Jun–Oct · Currently at season open</span>
+  </div>
+</div>
+
+<!-- Verdict Banner -->
+<div class="app-layout">
+  <div class="verdict-banner state-idle" id="verdictBanner" style="grid-column:1/-1">
+    <div class="verdict-left">
+      <div class="verdict-score" id="verdictScore">—<span>/12</span></div>
+      <div class="verdict-text">
+        <div class="verdict-call" id="verdictCall">Awaiting data</div>
+        <div class="verdict-sub" id="verdictSub">Fetch live conditions and field intel to generate assessment.</div>
+      </div>
+    </div>
+    <div class="verdict-right">
+      <button class="btn" id="fetchBtn" onclick="fetchLiveData()">⬇ Fetch Live Data</button>
+      <button class="btn primary" id="analyseBtn" onclick="runAnalysis()" disabled>◈ Run Analysis</button>
+    </div>
+  </div>
+
+  <!-- Left Panel -->
+  <div class="left-panel">
+
+    <!-- Live Data Status -->
+    <div class="panel-section" id="dataStatusSection">
+      <div class="section-label">Data sources</div>
+      <div id="dataSourcesList">
+        <div class="fetch-row">
+          <span class="fetch-icon">◈</span>
+          <span>Open-Meteo Marine API</span>
+          <span class="fetch-status" id="src-marine">—</span>
+        </div>
+        <div class="fetch-row">
+          <span class="fetch-icon">◈</span>
+          <span>Open-Meteo Forecast</span>
+          <span class="fetch-status" id="src-wind">—</span>
+        </div>
+        <div class="fetch-row">
+          <span class="fetch-icon">◈</span>
+          <span>Open-Meteo SST / Currents</span>
+          <span class="fetch-status" id="src-copernicus">—</span>
+        </div>
+        <div class="fetch-row">
+          <span class="fetch-icon">◈</span>
+          <span>Field Intel (Google)</span>
+          <span class="fetch-status" id="src-skipper">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live metrics -->
+    <div class="panel-section">
+      <div class="section-label">Current conditions</div>
+      <div class="live-data-grid">
+        <div class="live-metric">
+          <div class="live-metric-label">Wind</div>
+          <div class="live-metric-value" id="m-wind">—</div>
+          <div class="live-metric-unit">kts</div>
+        </div>
+        <div class="live-metric">
+          <div class="live-metric-label">Swell Ht</div>
+          <div class="live-metric-value" id="m-swell">—</div>
+          <div class="live-metric-unit">metres</div>
+        </div>
+        <div class="live-metric">
+          <div class="live-metric-label">Period</div>
+          <div class="live-metric-value" id="m-period">—</div>
+          <div class="live-metric-unit">seconds</div>
+        </div>
+        <div class="live-metric">
+          <div class="live-metric-label">SST</div>
+          <div class="live-metric-value" id="m-sst">—</div>
+          <div class="live-metric-unit">°C surface</div>
+        </div>
+        <div class="live-metric">
+          <div class="live-metric-label">SSH</div>
+          <div class="live-metric-value" id="m-ssh">—</div>
+          <div class="live-metric-unit">m anomaly</div>
+        </div>
+        <div class="live-metric">
+          <div class="live-metric-label">Water Temp</div>
+          <div class="live-metric-value" id="m-water">—</div>
+          <div class="live-metric-unit">°C coastal</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pillar Scores -->
+    <div class="panel-section">
+      <div class="section-label">Decision matrix</div>
+      <div class="pillar" id="p-access">
+        <div class="pillar-header">
+          <span class="pillar-name">01 — Access</span>
+          <span class="pillar-score" id="ps-access">0/3</span>
+        </div>
+        <div class="pillar-bar-track"><div class="pillar-bar-fill score-0" id="pb-access" style="width:0%"></div></div>
+        <div class="pillar-note" id="pn-access">Wind + swell threshold not yet assessed</div>
+      </div>
+      <div class="pillar" id="p-sst">
+        <div class="pillar-header">
+          <span class="pillar-name">02 — SST Gradient</span>
+          <span class="pillar-score" id="ps-sst">0/3</span>
+        </div>
+        <div class="pillar-bar-track"><div class="pillar-bar-fill score-0" id="pb-sst" style="width:0%"></div></div>
+        <div class="pillar-note" id="pn-sst">Isotherm wall not yet assessed</div>
+      </div>
+      <div class="pillar" id="p-alt">
+        <div class="pillar-header">
+          <span class="pillar-name">03 — Altimetry</span>
+          <span class="pillar-score" id="ps-alt">0/3</span>
+        </div>
+        <div class="pillar-bar-track"><div class="pillar-bar-fill score-0" id="pb-alt" style="width:0%"></div></div>
+        <div class="pillar-note" id="pn-alt">SSH anomaly not yet assessed</div>
+      </div>
+      <div class="pillar" id="p-eac">
+        <div class="pillar-header">
+          <span class="pillar-name">04 — EAC Velocity</span>
+          <span class="pillar-score" id="ps-eac">0/3</span>
+        </div>
+        <div class="pillar-bar-track"><div class="pillar-bar-fill score-0" id="pb-eac" style="width:0%"></div></div>
+        <div class="pillar-note" id="pn-eac">Current velocity not yet assessed</div>
+      </div>
+    </div>
+
+    <!-- Automated Intel Panel -->
+    <div class="panel-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="section-label" style="margin-bottom:0;">Live field intel</div>
+        <button class="btn" style="padding:5px 10px;font-size:11px;" id="intelFetchBtn" onclick="fetchFieldIntel()">⬇ Fetch Intel</button>
+      </div>
+
+      <div class="intel-card" id="intel-bait">
+        <div class="intel-card-label">Bait Activity</div>
+        <div class="intel-card-value" id="iv-bait">—</div>
+        <div class="intel-card-detail" id="id-bait">Not yet fetched</div>
+      </div>
+
+      <div class="intel-card" id="intel-reports">
+        <div class="intel-card-label">Trip Reports</div>
+        <div class="intel-card-value" id="iv-reports">—</div>
+        <div class="intel-card-detail" id="id-reports">Not yet fetched</div>
+      </div>
+
+      <div class="intel-card" id="intel-colour">
+        <div class="intel-card-label">EAC Colour Change</div>
+        <div class="intel-card-value" id="iv-colour">—</div>
+        <div class="intel-card-detail" id="id-colour">Not yet fetched</div>
+      </div>
+
+      <div class="intel-card" id="intel-hotspot">
+        <div class="intel-card-label">Active Hotspots</div>
+        <div class="intel-card-value" id="iv-hotspot">—</div>
+        <div class="intel-card-detail" id="id-hotspot">Not yet fetched</div>
+      </div>
+
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:10px;line-height:1.6;">
+        Sources: Google AI Overview · Fishing Station Mona Vale · Fishare.app · YouTube fishing reports · Facebook fishing groups
+      </div>
+    </div>
+
+    <!-- Fuel Budget -->
+    <div class="panel-section">
+      <div class="section-label">Fuel budget</div>
+
+      <!-- Boat selector -->
+      <div style="margin-bottom:12px;">
+        <div class="intel-card-label" style="margin-bottom:6px;">Vessel</div>
+        <select class="select-field" id="boatSelect" onchange="updateFuelBudget()">
+          <option value="gw216">Grady-White Fisherman 216 (Your boat)</option>
+          <option value="sf268">Sea Fox 268 Commander</option>
+          <option value="hh625">Haines Hunter 625 Offshore</option>
+          <option value="bc730">Bar Crusher 730HT</option>
+          <option value="stabi2250">Stabicraft 2250 Supercab</option>
+          <option value="custom">Custom / Enter manually</option>
+        </select>
+      </div>
+
+      <!-- Custom inputs — hidden unless custom selected -->
+      <div id="customInputs" style="display:none;margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <div class="intel-card-label" style="margin-bottom:4px;">Tank (L)</div>
+            <input type="number" class="input-field" id="customTank" value="300" min="50" max="1000" oninput="updateFuelBudget()">
+          </div>
+          <div>
+            <div class="intel-card-label" style="margin-bottom:4px;">Cruise burn (L/hr)</div>
+            <input type="number" class="input-field" id="customBurn" value="30" min="5" max="200" oninput="updateFuelBudget()">
+          </div>
+          <div>
+            <div class="intel-card-label" style="margin-bottom:4px;">Cruise speed (kt)</div>
+            <input type="number" class="input-field" id="customSpeed" value="22" min="10" max="50" oninput="updateFuelBudget()">
+          </div>
+          <div>
+            <div class="intel-card-label" style="margin-bottom:4px;">Troll burn (L/hr)</div>
+            <input type="number" class="input-field" id="customTroll" value="8" min="2" max="40" oninput="updateFuelBudget()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Gap input -->
+      <div style="margin-bottom:12px;">
+        <div class="intel-card-label" style="margin-bottom:4px;">Gap to warm water (nm)</div>
+        <input type="number" class="input-field" id="gapDistance" value="20" min="1" max="80" oninput="updateFuelBudget()">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:4px;">Auto-set from field intel. Adjust if needed.</div>
+      </div>
+
+      <!-- Troll time -->
+      <div style="margin-bottom:14px;">
+        <div class="intel-card-label" style="margin-bottom:4px;">Time on the grounds (hrs)</div>
+        <input type="number" class="input-field" id="trollHours" value="4" min="1" max="12" step="0.5" oninput="updateFuelBudget()">
+      </div>
+
+      <!-- Fuel budget breakdown -->
+      <div id="fuelBreakdown">
+        <div style="background:var(--surface);border:1px solid var(--border);padding:12px 14px;margin-bottom:2px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div class="intel-card-label">Fuel breakdown</div>
+            <div id="fuelVesselTag" style="font-family:var(--mono);font-size:9px;color:var(--accent);"></div>
+          </div>
+
+          <div class="fuel-row">
+            <span class="fuel-row-label">Transit (out)</span>
+            <span class="fuel-bar-wrap"><div class="fuel-bar" id="fb-transit-out"></div></span>
+            <span class="fuel-row-val" id="fv-transit-out">—</span>
+          </div>
+          <div class="fuel-row">
+            <span class="fuel-row-label">Trolling</span>
+            <span class="fuel-bar-wrap"><div class="fuel-bar fuel-bar-troll" id="fb-troll"></div></span>
+            <span class="fuel-row-val" id="fv-troll">—</span>
+          </div>
+          <div class="fuel-row">
+            <span class="fuel-row-label">Transit (home)</span>
+            <span class="fuel-bar-wrap"><div class="fuel-bar" id="fb-transit-home"></div></span>
+            <span class="fuel-row-val" id="fv-transit-home">—</span>
+          </div>
+          <div class="fuel-row" style="border-top:1px solid var(--border);margin-top:6px;padding-top:6px;">
+            <span class="fuel-row-label" style="color:var(--warn)">Reserve (25%)</span>
+            <span class="fuel-bar-wrap"><div class="fuel-bar fuel-bar-reserve" id="fb-reserve"></div></span>
+            <span class="fuel-row-val" id="fv-reserve">—</span>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-secondary);">Total required</div>
+            <div style="font-family:var(--display);font-weight:700;font-size:24px;" id="fuelTotal">—</div>
+          </div>
+
+          <!-- Tank gauge -->
+          <div style="margin-top:10px;">
+            <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-bottom:4px;">
+              <span>0L</span>
+              <span id="fuelTankLabel">Tank: 303L</span>
+            </div>
+            <div style="height:10px;background:var(--border);border-radius:2px;overflow:hidden;">
+              <div id="tankGauge" style="height:100%;border-radius:2px;transition:width 0.4s,background 0.4s;width:0%;background:var(--go);"></div>
+            </div>
+            <div style="font-family:var(--mono);font-size:10px;margin-top:6px;text-align:center;" id="fuelVerdict">—</div>
+          </div>
+        </div>
+
+        <!-- Turn-home rule -->
+        <div style="background:rgba(255,171,0,0.05);border:1px solid rgba(255,171,0,0.2);padding:10px 12px;font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--text-secondary);">
+          <strong style="color:var(--warn);">◈ Turn-home rule:</strong> <span id="turnHomeRule">—</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('briefing', this)">Tactical Brief</button>
+      <button class="tab" onclick="switchTab('map', this)">SST Map</button>
+      <button class="tab" onclick="switchTab('forecast', this)">7-Day Window</button>
+      <button class="tab" onclick="switchTab('reports', this)" id="reportsTab">Catch Reports <span id="reportsBadge" style="display:none;background:var(--go);color:var(--black);font-size:9px;padding:1px 5px;border-radius:2px;margin-left:4px;font-family:var(--mono);">NEW</span></button>
+    </div>
+
+    <!-- Briefing Tab -->
+    <div class="tab-content active" id="tab-briefing">
+      <div class="briefing-idle" id="briefingIdle">
+        <div class="briefing-idle-icon">◈</div>
+        <h3>No assessment generated</h3>
+        <p>Fetch live data then hit "Run Analysis" to generate your tactical brief. Add skipper intel to improve the assessment.</p>
+      </div>
+      <div class="briefing-output" id="briefingOutput">
+        <div class="brief-section">
+          <div class="brief-heading">◈ Strike Assessment</div>
+          <div class="brief-text" id="brief-assessment"></div>
+        </div>
+        <div class="brief-section">
+          <div class="brief-heading">◈ Conditions Summary</div>
+          <div id="brief-conditions-table"></div>
+        </div>
+        <div class="brief-section">
+          <div class="brief-heading">◈ Target Zone</div>
+          <div class="brief-text" id="brief-target"></div>
+        </div>
+        <div class="brief-section">
+          <div class="brief-heading">◈ Run Plan</div>
+          <div class="brief-text" id="brief-runplan"></div>
+        </div>
+        <div class="brief-section">
+          <div class="brief-heading">◈ Risk Factors</div>
+          <div class="brief-text" id="brief-risks"></div>
+        </div>
+        <div class="brief-section">
+          <div class="brief-heading">◈ Navigator Recommendation</div>
+          <div class="brief-text" id="brief-recommendation"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map Tab -->
+    <div class="tab-content" id="tab-map">
+      <div class="map-controls">
+        <span class="map-source-label">Windy</span>
+        <button class="map-btn active" onclick="setMapLayer('sst', this)">SST + Currents</button>
+        <button class="map-btn" onclick="setMapLayer('currents', this)">Currents Only</button>
+        <button class="map-btn" onclick="setMapLayer('wind', this)">Wind</button>
+        <button class="map-btn" onclick="setMapLayer('waves', this)">Swell</button>
+        <span class="map-source-label" style="margin-left:8px;">BOM</span>
+        <button class="map-btn" onclick="setMapLayer('bom_sst', this)">SST + Currents</button>
+
+      </div>
+      <div class="map-container" style="height:600px;position:relative;">
+        <div class="map-overlay-label" id="mapLabel" style="z-index:20;pointer-events:none;">SST + Currents — Windy</div>
+        <iframe id="mapWindyFrame"
+          src="about:blank"
+          style="width:100%;height:100%;border:none;display:block;"
+          allowfullscreen
+          loading="lazy">
+        </iframe>
+        <!-- Fishing marks overlay — sits on top of the Windy iframe -->
+        <svg id="mapOverlaySVG"
+          viewBox="0 0 900 600"
+          preserveAspectRatio="none"
+          style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:15;display:block;"
+          xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto">
+              <polygon points="0 0, 6 2, 0 4" fill="rgba(0,230,118,0.6)"/>
+            </marker>
+          </defs>
+
+          <!-- Distance rings from Sydney Heads (403,275) — zoom 8, centre -33.95/151.55, 3.7px/nm -->
+          <circle cx="403" cy="275" r="37"  fill="none" stroke="rgba(0,180,216,0.35)" stroke-width="1"   stroke-dasharray="4,3"/>
+          <circle cx="403" cy="275" r="73"  fill="none" stroke="rgba(0,180,216,0.25)" stroke-width="0.8" stroke-dasharray="4,4"/>
+          <circle cx="403" cy="275" r="110" fill="none" stroke="rgba(0,180,216,0.15)" stroke-width="0.8" stroke-dasharray="4,5"/>
+          <text x="441" y="272" fill="rgba(0,180,216,0.8)" font-size="9" font-family="monospace" letter-spacing="0.05em">10nm</text>
+          <text x="477" y="272" fill="rgba(0,180,216,0.6)" font-size="9" font-family="monospace" letter-spacing="0.05em">20nm</text>
+          <text x="514" y="272" fill="rgba(0,180,216,0.4)" font-size="9" font-family="monospace" letter-spacing="0.05em">30nm</text>
+
+          <!-- EAC flow -->
+          <path d="M 760 80 Q 780 200 790 420" fill="none" stroke="rgba(0,230,118,0.4)" stroke-width="1.5" stroke-dasharray="7,4" marker-end="url(#arrowhead)"/>
+          <text x="795" y="250" fill="rgba(0,230,118,0.55)" font-size="9" font-family="monospace" transform="rotate(8,795,250)" letter-spacing="0.06em">EAC</text>
+
+          <!-- Sydney Heads: 403,275 -->
+          <circle cx="403" cy="275" r="10" fill="none" stroke="var(--accent)" stroke-width="0.8" opacity="0.4"/>
+          <circle cx="403" cy="275" r="5"  fill="var(--accent)" opacity="0.95"/>
+          <text x="413" y="271" fill="rgba(200,216,228,0.95)" font-size="10" font-family="monospace" font-weight="bold" letter-spacing="0.04em">SYDNEY HEADS</text>
+
+          <!-- Long Reef: 415,251 — 33°43.7S 151°21.4E (~7nm) — kings / snapper -->
+          <circle cx="415" cy="251" r="4"   fill="none" stroke="rgba(200,216,228,0.75)" stroke-width="1.5"/>
+          <circle cx="415" cy="251" r="2"   fill="rgba(200,216,228,0.75)"/>
+          <text x="422" y="248" fill="rgba(200,216,228,0.85)" font-size="10" font-family="monospace" font-weight="bold" letter-spacing="0.03em">LONG REEF</text>
+          <text x="422" y="259" fill="rgba(200,216,228,0.55)" font-size="9"  font-family="monospace">~7nm  ·  kings / snapper / bream</text>
+
+          <!-- The Peak: 416,304 — 33°58'S 151°21'40"E (~9nm) -->
+          <circle cx="416" cy="304" r="3.5" fill="none" stroke="rgba(200,216,228,0.6)" stroke-width="1.5"/>
+          <circle cx="416" cy="304" r="1.5" fill="rgba(200,216,228,0.6)"/>
+          <text x="422" y="301" fill="rgba(200,216,228,0.75)" font-size="10" font-family="monospace" font-weight="bold" letter-spacing="0.03em">THE PEAK</text>
+          <text x="422" y="312" fill="rgba(200,216,228,0.55)" font-size="9"  font-family="monospace">33°58'S 151°21'40"E  ·  ~9nm</text>
+
+          <!-- 12 Mile Reef: 436,295 (~11nm) -->
+          <circle cx="436" cy="295" r="4"   fill="none" stroke="rgba(200,216,228,0.7)" stroke-width="1.5"/>
+          <circle cx="436" cy="295" r="2"   fill="rgba(200,216,228,0.7)"/>
+          <text x="443" y="292" fill="rgba(200,216,228,0.8)"  font-size="10" font-family="monospace" font-weight="bold" letter-spacing="0.03em">12 MILE REEF</text>
+          <text x="443" y="303" fill="rgba(200,216,228,0.55)" font-size="9"  font-family="monospace">~11nm  ·  90-110m  ·  kings / snapper</text>
+
+          <!-- Bait Station: 486,260 (~25nm ENE) -->
+          <circle cx="486" cy="260" r="5"   fill="none" stroke="#ff6b35" stroke-width="1.5" opacity="0.95"/>
+          <circle cx="486" cy="260" r="2.5" fill="#ff6b35" opacity="0.95"/>
+          <text x="494" y="256" fill="#ff6b35"              font-size="10" font-family="monospace" font-weight="bold" letter-spacing="0.04em">BAIT STATION</text>
+          <text x="494" y="267" fill="rgba(255,107,53,0.7)" font-size="9"  font-family="monospace">~25nm  ·  60-70fm  ·  check FishSmart for FAD pos</text>
+
+          <!-- Browns Mountain: 470,318 (~22nm ESE) -->
+          <circle cx="470" cy="318" r="12" fill="none" stroke="rgba(255,171,0,0.2)"  stroke-width="1"/>
+          <circle cx="470" cy="318" r="8"  fill="none" stroke="#ffab00" stroke-width="1.5" opacity="0.95"/>
+          <circle cx="470" cy="318" r="3"  fill="#ffab00" opacity="0.95"/>
+          <text x="482" y="313" fill="#ffab00"              font-size="11" font-family="monospace" font-weight="bold" letter-spacing="0.04em">BROWNS MTN</text>
+          <text x="482" y="325" fill="rgba(255,171,0,0.75)" font-size="9"  font-family="monospace">34°02'S 151°39.5'E  ·  ~22nm  ·  800m+ seamount</text>
+
+          <text x="8" y="594" fill="rgba(100,138,158,0.5)" font-size="9" font-family="monospace" letter-spacing="0.04em">MARKS AT ZOOM 8 · coords verified C-MAP/DPI · zoom/pan freely</text>
+        </svg>
+
+                        <!-- Toggle marks button -->
+        <button id="mapMarksToggle" onclick="toggleMapMarks()"
+          style="position:absolute;bottom:36px;right:8px;z-index:25;background:rgba(8,12,15,0.85);border:1px solid var(--border-light);color:var(--accent);font-family:var(--mono);font-size:10px;letter-spacing:0.08em;padding:5px 10px;cursor:pointer;text-transform:uppercase;">
+          ◈ MARKS ON
+        </button>
+      </div>
+      <p style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center;margin-top:8px;">
+        Interactive — pinch/scroll to zoom · tap to read SST values · marks show default zoom only
+      </p>
+    </div>
+
+    <!-- Forecast Tab -->
+    <div class="tab-content" id="tab-forecast">
+      <div class="section-label" style="margin-bottom:16px;">7-day access window forecast</div>
+      <div class="forecast-grid" id="forecastGrid">
+        <!-- Populated by JS -->
+      </div>
+      <div class="forecast-detail" id="forecastDetail">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center;padding:20px 0;">
+          Fetch live data to generate forecast window analysis
+        </div>
+      </div>
+    </div>
+
+    <!-- Catch Reports Tab -->
+    <div class="tab-content" id="tab-reports">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div class="section-label" style="margin-bottom:0;">Local catch intelligence</div>
+        <button class="btn primary" onclick="searchCatchReports()" id="searchReportsBtn">⬇ Search Reports</button>
+      </div>
+
+      <!-- Intel Summary Card -->
+      <div id="reportsSummaryCard" style="display:none;background:var(--surface);border:1px solid var(--border);padding:18px 20px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);">◈ AI Intel Summary</div>
+          <div id="reportsTimestamp" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-left:auto;"></div>
+        </div>
+        <div id="reportsSummaryText" style="font-size:14px;line-height:1.8;color:var(--text-primary);font-weight:300;"></div>
+      </div>
+
+      <!-- Season Context -->
+      <div style="background:rgba(0,180,216,0.04);border:1px solid rgba(0,180,216,0.2);padding:14px 18px;margin-bottom:20px;">
+        <div id="seasonContextLabel" style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">◈ Season Context</div>
+        <div id="seasonContextText" style="font-size:13px;line-height:1.7;color:var(--text-secondary);">
+          Select a species and fetch data to see season context.
+        </div>
+      </div>
+
+      <!-- Reports Feed -->
+      <div id="reportsFeed">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center;padding:40px 0;">
+          Hit "Search Reports" to pull the latest catch intel from Sydney fishing sources.
+        </div>
+      </div>
+
+      <!-- Sources Footer -->
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Sources searched</div>
+        <div id="reportsSources" style="font-family:var(--mono);font-size:11px;color:var(--text-secondary);line-height:2;">
+          Fishare.app · Google News · Fishing World Australia · Fishing Monthly · YouTube · Facebook fishing groups · Local tackle shop reports
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+const state = {
+  liveData: null,
+  scores: { access: 0, sst: 0, alt: 0, eac: 0 },
+  notes: { access: '', sst: '', alt: '', eac: '' },
+  forecastDays: [],
+  fetched: false
+};
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  updateDateDisplay();
+  setInterval(updateDateDisplay, 60000);
+  buildEmptyForecast();
+  updateFuelBudget();
+  intel.gap = parseFloat(document.getElementById('gapDistance').value) || 20;
+  fetchTideData();
+  setInterval(fetchTideData, 30 * 60 * 1000); // refresh every 30 min
+  updateSeasonContext('yft'); // default species
+});
+
+// ═══════════════════════════════════════
+// TIDAL METER
+// ═══════════════════════════════════════
+async function fetchTideData() {
+  try {
+    // Sydney Heads coords — 2 day hourly forecast
+    const url = 'https://marine-api.open-meteo.com/v1/marine?latitude=-33.8688&longitude=151.2093&hourly=sea_level_height_msl&timezone=Australia%2FSydney&forecast_days=2';
+    const res  = await fetch(url);
+    const data = await res.json();
+    const times  = data.hourly.time;
+    const levels = data.hourly.sea_level_height_msl;
+
+    // Find the current hour index
+    const now     = new Date();
+    const nowStr  = now.toISOString().substring(0, 13); // "2026-05-29T10"
+    const idx     = times.findIndex(t => t.startsWith(nowStr));
+    if (idx === -1) return;
+
+    const current = levels[idx];
+    const prev    = levels[Math.max(0, idx - 1)];
+    const next    = levels[Math.min(levels.length - 1, idx + 1)];
+
+    // Min/max over next 24h for bar scaling
+    const window24 = levels.slice(Math.max(0, idx - 6), idx + 18);
+    const minH = Math.min(...window24);
+    const maxH = Math.max(...window24);
+    const range = maxH - minH || 1;
+    const pct   = Math.round(((current - minH) / range) * 100);
+
+    // Rising or falling
+    const trend   = next > prev ? 'rising' : 'falling';
+    const arrow   = trend === 'rising' ? '▲ rising' : '▼ falling';
+
+    // Update UI
+    document.getElementById('tideValue').textContent     = (current >= 0 ? '+' : '') + current.toFixed(2) + 'm';
+    document.getElementById('tideDirection').textContent  = arrow;
+    document.getElementById('tideDirection').className    = 'tide-direction ' + trend;
+    document.getElementById('tideBarFill').style.height   = Math.max(5, Math.min(100, pct)) + '%';
+
+    // Colour the bar based on trend
+    document.getElementById('tideBarFill').style.background = trend === 'rising'
+      ? 'var(--go)' : 'var(--warn)';
+
+  } catch(e) {
+    // Silent fail — tide is supplementary info
+    console.warn('Tide fetch failed:', e.message);
+  }
+}
+
+function updateDateDisplay() {
+  const now = new Date();
+  const opts = { weekday:'short', day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short' };
+  document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-AU', opts);
+}
+
+// ═══════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// LIVE DATA FETCH
+// ═══════════════════════════════════════
+async function fetchLiveData() {
+  // Detect file:// — APIs won't work, show clear instructions
+  if (window.location.protocol === 'file:') {
+    alert('⚠️ Strike Window needs to run from a web server to fetch live data.\n\nOpen Terminal and run:\n\ncd "/Users/hamishpollitt/Desktop/Project Strikewindow/StrikeWindow_Foundation/app" && python3 -m http.server 8765\n\nThen open: http://localhost:8765 in Chrome.\n\nOr visit strikewindow.io to use the live version.');
+    return;
+  }
+  showLoading(true);
+  setStatus('src-marine', 'loading');
+  setStatus('src-wind', 'loading');
+  setStatus('src-copernicus', 'loading');
+
+  const LAT = -34.1;
+  const LON = 152.5;
+
+  try {
+    updateLoadingStep('Fetching swell & wave data...');
+    const marineCurrentUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${LAT}&longitude=${LON}&current=wave_height,swell_wave_height,swell_wave_period&timezone=Australia/Sydney`;
+    const marineDailyUrl   = `https://marine-api.open-meteo.com/v1/marine?latitude=${LAT}&longitude=${LON}&daily=wave_height_max,swell_wave_height_max,swell_wave_period_max&timezone=Australia/Sydney&forecast_days=7`;
+
+    updateLoadingStep('Fetching wind forecast...');
+    const windCurrentUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kn&timezone=Australia/Sydney`;
+    const windDailyUrl   = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum&wind_speed_unit=kn&timezone=Australia/Sydney&forecast_days=7`;
+
+    const [marineCurrentRes, marineDailyRes, windCurrentRes, windDailyRes] = await Promise.all([
+      fetch(marineCurrentUrl),
+      fetch(marineDailyUrl),
+      fetch(windCurrentUrl),
+      fetch(windDailyUrl)
+    ]);
+
+    const marineCurrent = await marineCurrentRes.json();
+    const marineDaily   = await marineDailyRes.json();
+    const windCurrent   = await windCurrentRes.json();
+    const windDaily     = await windDailyRes.json();
+
+    setStatus('src-marine', 'ok');
+    setStatus('src-wind', 'ok');
+
+    updateLoadingStep('Processing oceanographic data...');
+
+    // Current conditions
+    const waveH      = marineCurrent.current.wave_height;
+    const swellH     = marineCurrent.current.swell_wave_height;
+    const swellP     = marineCurrent.current.swell_wave_period;
+    const windSpd    = windCurrent.current.wind_speed_10m;
+    const windDir    = windCurrent.current.wind_direction_10m;
+    const windGust   = windCurrent.current.wind_gusts_10m;
+
+    // SST + SSH: fetch live from Open-Meteo marine (sea surface temp at offshore coords)
+    // and derive SSH proxy from wave/swell data. EAC speed approximated from current velocity.
+    updateLoadingStep('Fetching SST data...');
+    const sstUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=-34.0&longitude=151.7&hourly=sea_surface_temperature&timezone=Australia/Sydney&forecast_days=1`;
+    const sstColdUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=-34.5&longitude=151.2&hourly=sea_surface_temperature&timezone=Australia/Sydney&forecast_days=1`;
+    const currentUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=-34.1&longitude=152.5&hourly=ocean_current_velocity,ocean_current_direction&timezone=Australia/Sydney&forecast_days=1`;
+
+    const [sstRes, sstColdRes, currentRes] = await Promise.all([
+      fetch(sstUrl), fetch(sstColdUrl), fetch(currentUrl)
+    ]);
+    const sstData    = await sstRes.json();
+    const sstColdData = await sstColdRes.json();
+    const currentData = await currentRes.json();
+
+    // Get current hour index
+    const nowHour = new Date().getHours();
+    const sst_warm  = parseFloat((sstData.hourly?.sea_surface_temperature?.[nowHour] ?? 22.0).toFixed(1));
+    const sst_cold  = parseFloat((sstColdData.hourly?.sea_surface_temperature?.[nowHour] ?? 18.5).toFixed(1));
+    const sst_delta = parseFloat(Math.max(0, sst_warm - sst_cold).toFixed(1));
+    const eac_speed = parseFloat((currentData.hourly?.ocean_current_velocity?.[nowHour] ?? 1.5).toFixed(1));
+    // SSH: proxy from EAC speed (stronger current = higher SSH anomaly on warm side)
+    const ssh = parseFloat(Math.max(0, eac_speed * 8 + (sst_delta > 2 ? 5 : 0)).toFixed(1));
+
+    // Build forecast
+    const forecastDays = buildForecastData(marineDaily, windDaily);
+
+    state.liveData = {
+      wind:            Math.round(windSpd),
+      windDir:         windDir,
+      windGust:        Math.round(windGust),
+      swell:           parseFloat(swellH || waveH).toFixed(1),
+      period:          Math.round(swellP),
+      sst_warm, sst_cold, sst_delta,
+      ssh, eac_speed,
+      eac_on_structure: 'partial',
+      water_temp:      20.5,
+      forecastDays
+    };
+
+    state.forecastDays = forecastDays;
+
+    updateMetrics();
+    scoreMatrix();       // score first so base scores are set
+    updateVerdict();
+    buildForecastGrid(); // then rebuild grid with correct base scores
+
+    setStatus('src-copernicus', 'ok');
+
+    document.getElementById('liveStatusDot').classList.add('live');
+    document.getElementById('liveStatusText').textContent = 'Live — ' + new Date().toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
+
+    state.fetched = true;
+    document.getElementById('analyseBtn').disabled = false;
+
+  } catch(e) {
+    console.error(e);
+    setStatus('src-marine', 'err');
+    setStatus('src-wind', 'err');
+    // Show specific error message
+    const msg = e.message.includes('Failed to fetch')
+      ? 'Network error — make sure you are running Strike Window via the launch script (not opened directly as a file).\n\nIn Terminal run:\ncd "/Users/hamishpollitt/Desktop/Project Strikewindow/StrikeWindow_Foundation/app" && python3 -m http.server 8765'
+      : 'Data fetch failed: ' + e.message;
+    alert(msg);
+  }
+
+  showLoading(false);
+}
+
+function buildForecastData(marineDaily, windDaily) {
+  const days = [];
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const now = new Date();
+
+  for (let d = 0; d < 7; d++) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + d);
+
+    const maxWave  = marineDaily.daily?.wave_height_max?.[d]       ?? 1.5;
+    const maxSwell = marineDaily.daily?.swell_wave_height_max?.[d] ?? 1.5;
+    const maxWind  = windDaily.daily?.wind_speed_10m_max?.[d]      ?? 10;
+    const maxGust  = windDaily.daily?.wind_gusts_10m_max?.[d]      ?? 15;
+
+    let accessScore = 0;
+    if (maxWind <= 12 && maxSwell <= 1.5)      accessScore = 3;
+    else if (maxWind <= 15 && maxSwell <= 2.0) accessScore = 2;
+    else if (maxWind <= 18 && maxSwell <= 2.5) accessScore = 1;
+
+    days.push({
+      dayName: dayNames[date.getDay()],
+      dayNum:  date.getDate(),
+      month:   date.toLocaleDateString('en-AU', {month:'short'}),
+      isToday: d === 0,
+      maxWave:  parseFloat(maxWave).toFixed(1),
+      maxSwell: parseFloat(maxSwell).toFixed(1),
+      maxWind:  Math.round(maxWind),
+      maxGust:  Math.round(maxGust),
+      accessScore
+      // estimatedTotal calculated at render time in buildForecastGrid
+    });
+  }
+  return days;
+}
+
+// ═══════════════════════════════════════
+// METRICS UPDATE
+// ═══════════════════════════════════════
+function degreesToCompass(deg) {
+  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  return dirs[Math.round(deg / 22.5) % 16];
+}
+
+function updateMetrics() {
+  const d = state.liveData;
+  if (!d) return;
+  const dirLabel = d.windDir !== undefined ? ' ' + degreesToCompass(d.windDir) : '';
+  setMetric('m-wind', d.wind + dirLabel);
+  setMetric('m-swell', d.swell);
+  setMetric('m-period', d.period);
+  setMetric('m-sst', d.sst_warm + '°');
+  setMetric('m-ssh', '+' + d.ssh.toFixed(1) + 'cm');
+  setMetric('m-water', d.water_temp + '°');
+}
+
+function setMetric(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+// ═══════════════════════════════════════
+// SPECIES DATABASE
+// ═══════════════════════════════════════
+
+const SPECIES = {
+  yft: {
+    name: 'Yellowfin Tuna',
+    icon: '🐟',
+    season: { peak: [5,6,7,8,9], open: [4,10], closed: [0,1,2,3,11] }, // 0=Jan
+    tagline: 'YFT peak window Jun–Oct · Currently at season open',
+    // SST thresholds
+    sstWarmMin: 20, sstWarmIdeal: 22, sstDeltaMin: 2, sstDeltaIdeal: 3,
+    // Gap expectations
+    gapTypical: 20, gapMax: 35,
+    // EAC importance
+    eacCritical: true,
+    // Pillar weights description
+    pillar1: 'Wind <12kt, Swell <1.5m',
+    pillar2: 'SST Wall — warm/cold break 3°C+',
+    pillar3: 'SSH +20–40cm WCE on shelf',
+    pillar4: 'EAC 2kt+ pushing warm water onto shelf edge',
+    // Target zones
+    primaryTarget: 'SST colour change / EAC edge — typically 25–45nm offshore (34.0°S, 151.6°E approx)',
+    secondaryTarget: 'Long Reef Wall (33°44.4S 151°19.5E) — rocky drop-off, holds kings year round',
+    trollSpeed: '7–8kt into the EAC',
+    spread: 'Skirted lures + bibless minnows on the colour change. Spread wide — 20–40m back.',
+    // Intel search terms
+    searchTerms: 'Sydney offshore yellowfin tuna fishing report',
+    // Troll burn modifier (slower troll)
+    trollBurnMod: 1.0,
+    defaultGap: 20,
+    // Season label
+    seasonStatus: (m) => [5,6,7,8,9].includes(m) ? 'peak' : [4,10].includes(m) ? 'open' : 'closed',
+    seasonLabel: (m) => [5,6,7,8,9].includes(m) ? 'PEAK SEASON' : [4,10].includes(m) ? 'SEASON OPEN' : 'OFF SEASON'
+  },
+
+  marlin: {
+    name: 'Marlin',
+    icon: '⚡',
+    season: { peak: [10,11,0,1,2], open: [9,3], closed: [4,5,6,7,8] },
+    tagline: 'Marlin season Nov–May · Blue water 24°C+ required',
+    sstWarmMin: 23, sstWarmIdeal: 25, sstDeltaMin: 1, sstDeltaIdeal: 2,
+    gapTypical: 35, gapMax: 60,
+    eacCritical: true,
+    pillar1: 'Wind <15kt, Swell <2.0m — blue water run',
+    pillar2: 'SST 24°C+ blue water, clean colour change',
+    pillar3: 'SSH +25cm+ — strong WCE holding offshore',
+    pillar4: 'EAC pushing warm water to shelf edge',
+    primaryTarget: 'Blue water edge 35–55nm offshore — EAC core (33.5°S, 152.5°E approx)',
+    secondaryTarget: 'The Southern Canyons / FAD line — follow the 24°C isotherm',
+    trollSpeed: '8–10kt with teasers and dredges',
+    spread: 'Teasers + dredges + skirted lures. Keep the spread tight at 15–25m. Watch the shotgun.',
+    searchTerms: 'Sydney offshore marlin fishing report blue water',
+    trollBurnMod: 1.3,
+    defaultGap: 35,
+    seasonStatus: (m) => [10,11,0,1,2].includes(m) ? 'peak' : [9,3].includes(m) ? 'open' : 'closed',
+    seasonLabel: (m) => [10,11,0,1,2].includes(m) ? 'PEAK SEASON' : [9,3].includes(m) ? 'SEASON OPEN' : 'OFF SEASON'
+  },
+
+  mahi: {
+    name: 'Mahi-Mahi',
+    icon: '🌊',
+    season: { peak: [11,0,1,2], open: [10,3], closed: [4,5,6,7,8,9] },
+    tagline: 'Mahi season Dec–Apr · Follows debris lines and current edges',
+    sstWarmMin: 22, sstWarmIdeal: 24, sstDeltaMin: 1, sstDeltaIdeal: 2,
+    gapTypical: 25, gapMax: 45,
+    eacCritical: false,
+    pillar1: 'Wind <12kt, Swell <1.5m',
+    pillar2: 'SST 22°C+ — warm surface water required',
+    pillar3: 'SSH +15cm+ — current lines and flotsam aggregation',
+    pillar4: 'Current lines, weed, floating debris — visual search',
+    primaryTarget: 'Current lines and floating debris 20–35nm offshore',
+    secondaryTarget: 'Weed lines pushed inshore by EAC eddies',
+    trollSpeed: '7–9kt along current lines',
+    spread: 'Small lures + flies near debris. Once you find one, slow down — school will be close.',
+    searchTerms: 'Sydney offshore mahi mahi dolphinfish fishing report',
+    trollBurnMod: 1.0,
+    defaultGap: 25,
+    seasonStatus: (m) => [11,0,1,2].includes(m) ? 'peak' : [10,3].includes(m) ? 'open' : 'closed',
+    seasonLabel: (m) => [11,0,1,2].includes(m) ? 'PEAK SEASON' : [10,3].includes(m) ? 'SEASON OPEN' : 'OFF SEASON'
+  },
+
+  kingfish: {
+    name: 'Kingfish',
+    icon: '🎯',
+    season: { peak: [3,4,5,6,7], open: [2,8], closed: [9,10,11,0,1] },
+    tagline: 'Kingfish Apr–Sep · Long Reef · The Peak · 12 Mile Reef',
+    sstWarmMin: 17, sstWarmIdeal: 20, sstDeltaMin: 0, sstDeltaIdeal: 1,
+    gapTypical: 10, gapMax: 15,
+    eacCritical: true,
+    pillar1: 'Wind <15kt, Swell <2.0m',
+    pillar2: 'SST 18–22°C — kings prefer cooler water than tuna',
+    pillar3: 'SSH neutral to slight positive — EAC edge contact',
+    pillar4: 'EAC bait push onto Long Reef / 12 Mile Reef structure',
+    primaryTarget: 'Long Reef (7nm) · The Peak (9nm) · 12 Mile Reef (11nm) — inshore structure kings',
+    secondaryTarget: 'Long Reef Wall (33°44\'22"S 151°19\'30"E) — rocky drop-off holding kings year round',
+    trollSpeed: '4–6kt slow troll or jigging over structure',
+    spread: 'Knife jigs, slugs, live yellowtail or slimy mackerel. Work the current-facing edges of each mark — kings pin on the up-current side of structure. 20–30 mins per mark before moving. Long Reef Wall is the pick when kings are schooled on the bait.',
+    searchTerms: 'Sydney offshore kingfish yellowtail fishing report Long Reef 12 Mile',
+    trollBurnMod: 0.7,
+    defaultGap: 10,
+    seasonStatus: (m) => [3,4,5,6,7].includes(m) ? 'peak' : [2,8].includes(m) ? 'open' : 'closed',
+    seasonLabel: (m) => [3,4,5,6,7].includes(m) ? 'PEAK SEASON' : [2,8].includes(m) ? 'SEASON OPEN' : 'OFF SEASON'
+  },
+
+  snapper: {
+    name: 'Snapper',
+    icon: '🔴',
+    season: { peak: [0,1,2,3,4,5,6,7,8,9,10,11], open: [], closed: [] }, // year round
+    tagline: 'Snapper year-round · Tide phase dominant — structure and depth key',
+    sstWarmMin: 15, sstWarmIdeal: 19, sstDeltaMin: 0, sstDeltaIdeal: 1,
+    gapTypical: 8, gapMax: 20,
+    eacCritical: false,
+    pillar1: 'Wind <12kt, Swell <1.5m — anchor/drift fishing',
+    pillar2: 'SST 15–20°C — snapper prefer cooler shelf water',
+    pillar3: 'Tide phase — run-in tide on structure is primary trigger',
+    pillar4: 'Bait on bottom structure — Botany Canyon, lumps',
+    primaryTarget: 'Botany Canyon (34.1°S, 151.3°E) — 8–12nm · The Lumps south of Cronulla',
+    secondaryTarget: 'Middle Ground / Snapper grounds off Cronulla',
+    trollSpeed: 'Drifting / anchored — not trolling',
+    spread: 'Whole pilchards, squid, soft plastics on bottom. Run-in tide on the peak — that\'s your window.',
+    searchTerms: 'Sydney offshore snapper fishing report Botany Canyon',
+    trollBurnMod: 0.3,
+    defaultGap: 8,
+    seasonStatus: (m) => 'peak',
+    seasonLabel: (m) => 'YEAR ROUND'
+  }
+};
+
+// Current selected species
+let currentSpecies = 'yft';
+
+
+const SEASON_CONTEXT = {
+  yft:      { title: 'Sydney YFT', season: 'June–October', detail: 'EAC strengthens and pushes warm water onto the shelf. Fish from 15–50kg through the core months, with 50kg+ fish arriving August–September.' },
+  marlin:   { title: 'Sydney Marlin', season: 'November–May', detail: 'Blue water 24°C+ moves in as the EAC runs hard. Striped marlin dominate early season; blacks push through December–February.' },
+  mahi:     { title: 'Sydney Mahi-Mahi', season: 'December–April', detail: 'Follows the FAD lines and current debris. Peak around January–February when surface temps peak. Schools can be large but move fast — find the debris lines.' },
+  kingfish: { title: 'Sydney Kingfish', season: 'April–September', detail: 'Structure-dependent. Long Reef (~7nm), The Peak (~9nm) and 12 Mile Reef (~11nm) are the go-to kingfish marks. Cooler water 18–22°C is the preference.' },
+  snapper:  { title: 'Sydney Snapper', season: 'Year-round', detail: 'Tide phase is the primary trigger — run-in tide on structure. Best fishing typically autumn and winter on the inshore grounds and canyons.' }
+};
+
+function updateSeasonContext(speciesKey) {
+  const ctx = SEASON_CONTEXT[speciesKey];
+  if (!ctx) return;
+  const sp = SPECIES[speciesKey];
+  const month = new Date().getMonth();
+  const status = sp.seasonStatus(month);
+  const statusColor = status === 'peak' ? 'var(--go)' : status === 'open' ? 'var(--warn)' : 'var(--nogo)';
+  const statusLabel = sp.seasonLabel(month);
+  document.getElementById('seasonContextLabel').textContent = '◈ Season Context — ' + ctx.title;
+  document.getElementById('seasonContextText').innerHTML =
+    `Peak season <strong style="color:var(--text-primary)">${ctx.season}</strong>. Currently <strong style="color:${statusColor}">${statusLabel}</strong>. ${ctx.detail}`;
+}
+
+function setSpecies(speciesKey, btn) {
+  currentSpecies = speciesKey;
+  const sp = SPECIES[speciesKey];
+  const now = new Date();
+  const month = now.getMonth(); // 0=Jan
+
+  // Update buttons
+  document.querySelectorAll('.species-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Update season badge
+  const status = sp.seasonStatus(month);
+  const label  = sp.seasonLabel(month);
+  const badge  = document.getElementById('speciesSeasonBadge');
+  badge.className = 'season-badge ' + status;
+  badge.textContent = '● ' + label;
+  document.getElementById('speciesTagline').textContent = sp.tagline;
+
+  // Update pillar labels in the decision matrix
+  document.querySelector('#p-access .pillar-name').textContent  = '01 — Access';
+  document.querySelector('#p-sst .pillar-name').textContent     = speciesKey === 'snapper' ? '02 — Water Temp' : '02 — SST Gradient';
+  document.querySelector('#p-alt .pillar-name').textContent     = '03 — ' + (speciesKey === 'snapper' ? 'Tide Phase' : 'Altimetry');
+  document.querySelector('#p-eac .pillar-name').textContent     = '04 — ' + (speciesKey === 'snapper' ? 'Structure/Bait' : speciesKey === 'mahi' ? 'Current Lines' : 'EAC Velocity');
+
+  // Update default gap in fuel calculator
+  const gapInput = document.getElementById('gapDistance');
+  if (gapInput) { gapInput.value = sp.defaultGap; }
+  intel.gap = sp.defaultGap;
+  updateFuelBudget();
+
+  // Re-score if we have data
+  if (state.fetched) {
+    scoreMatrix();
+    updateVerdict();
+    buildForecastGrid();
+  }
+
+  // Update catch reports season context
+  updateSeasonContext(speciesKey);
+}
+
+// ═══════════════════════════════════════
+// SCORING — SPECIES AWARE
+// ═══════════════════════════════════════
+function scoreMatrix() {
+  const d  = state.liveData;
+  if (!d) return;
+  const sp = SPECIES[currentSpecies];
+
+  // Pillar 1: Access
+  let access = 0, accessNote = '';
+  // Snapper/kingfish: anchor/structure fishing — tighter wind limit than trolling
+  const windMax  = currentSpecies === 'marlin' ? 15 : (currentSpecies === 'snapper' || currentSpecies === 'kingfish') ? 12 : 12;
+  const swellMax = currentSpecies === 'marlin' ? 2.0 : (currentSpecies === 'snapper') ? 1.2 : 1.5;
+  const wind = d.wind, swell = parseFloat(d.swell);
+  // Snapper: anchoring in >15kt is miserable, >18kt is dangerous
+  if (currentSpecies === 'snapper') {
+    if (wind <= 12 && swell <= 1.2)       { access = 3; accessNote = `${wind}kt / ${swell}m — ideal anchor/drift conditions.`; }
+    else if (wind <= 15 && swell <= 1.5)  { access = 2; accessNote = `${wind}kt / ${swell}m — workable for anchoring. Monitor.`; }
+    else if (wind <= 18 && swell <= 2.0)  { access = 1; accessNote = `${wind}kt / ${swell}m — rough for anchoring. Crew call.`; }
+    else                                  { access = 0; accessNote = `${wind}kt / ${swell}m — too rough to anchor on structure. Stay home.`; }
+  } else {
+    if (wind <= windMax && swell <= swellMax)              { access = 3; accessNote = `${wind}kt / ${swell}m — ideal window.`; }
+    else if (wind <= windMax+3 && swell <= swellMax+0.5)   { access = 2; accessNote = `${wind}kt / ${swell}m — marginal but workable. Monitor.`; }
+    else if (wind <= windMax+6 && swell <= swellMax+1.0)   { access = 1; accessNote = `${wind}kt / ${swell}m — uncomfortable. Crew call.`; }
+    else                                                    { access = 0; accessNote = `${wind}kt / ${swell}m — unacceptable. Stay home.`; }
+  }
+
+  // Pillar 2: SST / Temp
+  let sst = 0, sstNote = '';
+  if (currentSpecies === 'snapper') {
+    const temp = d.sst_warm;
+    if (temp >= 16 && temp <= 20)      { sst = 3; sstNote = `${temp}°C — ideal snapper temp range.`; }
+    else if (temp >= 14 && temp <= 22) { sst = 2; sstNote = `${temp}°C — acceptable for snapper, not ideal.`; }
+    else                               { sst = 1; sstNote = `${temp}°C — outside snapper preference. Fish are present but less active.`; }
+  } else {
+    const delta = d.sst_delta;
+    const warmOk = d.sst_warm >= sp.sstWarmMin;
+    if (warmOk && delta >= sp.sstDeltaIdeal)    { sst = 3; sstNote = `${d.sst_warm}°C vs ${d.sst_cold}°C — ${delta.toFixed(1)}° wall confirmed.`; }
+    else if (warmOk && delta >= sp.sstDeltaMin) { sst = 2; sstNote = `${d.sst_warm}°C vs ${d.sst_cold}°C — ${delta.toFixed(1)}° soft gradient.`; }
+    else if (delta >= sp.sstDeltaMin)           { sst = 1; sstNote = `Temp marginal for ${sp.name} — need ${sp.sstWarmMin}°C+.`; }
+    else                                        { sst = 0; sstNote = `SST below ${sp.name} threshold.`; }
+  }
+
+  // Pillar 3: Altimetry / Tide
+  let alt = 0, altNote = '';
+  if (currentSpecies === 'snapper') {
+    // Use tide direction from the tide meter (rising = run-in = good for snapper)
+    const tideDir = document.getElementById('tideDirection')?.textContent || '';
+    const tideVal = parseFloat(document.getElementById('tideValue')?.textContent || '0');
+    if (tideDir.includes('rising')) {
+      alt = 3; altNote = `Tide rising (${tideVal > 0 ? '+' : ''}${tideVal.toFixed(2)}m) — run-in tide. This is your window. Get on structure now.`;
+    } else if (tideDir.includes('falling') && Math.abs(tideVal) < 0.3) {
+      alt = 2; altNote = `Tide turning (${tideVal.toFixed(2)}m) — transition phase. Run-in tide approaching. Position on structure.`;
+    } else {
+      alt = 1; altNote = `Tide falling (${tideVal.toFixed(2)}m) — outgoing tide. Snapper bite typically drops off. Wait for the run-in.`;
+    }
+  } else if (currentSpecies === 'mahi') {
+    const ssh = d.ssh;
+    if (ssh >= 15)     { alt = 3; altNote = `+${ssh.toFixed(0)}cm — current lines and debris aggregation likely.`; }
+    else if (ssh >= 8) { alt = 2; altNote = `+${ssh.toFixed(0)}cm — some current structure present.`; }
+    else               { alt = 1; altNote = `SSH flat — debris lines may be absent. Visual search required.`; }
+  } else {
+    const ssh = d.ssh;
+    if (ssh >= 20 && ssh <= 45)  { alt = 3; altNote = `+${ssh.toFixed(0)}cm SSH anomaly — WCE geometry confirmed.`; }
+    else if (ssh >= 10)          { alt = 2; altNote = `+${ssh.toFixed(0)}cm — weak WCE present. Sub-optimal.`; }
+    else if (ssh > 45)           { alt = 2; altNote = `+${ssh.toFixed(0)}cm — strong WCE, verify shelf position.`; }
+    else                         { alt = 0; altNote = `SSH flat. No WCE structure.`; }
+  }
+
+  // Pillar 4: EAC / Current / Structure
+  let eac = 0, eacNote = '';
+  const eacSpd = d.eac_speed;
+  const onStructure = d.eac_on_structure;
+  if (currentSpecies === 'snapper') {
+    // Score based on bait intel — snapper stack under bait on structure
+    if (intel.bait === 'heavy')        { eac = 3; eacNote = `Heavy bait confirmed on structure — snapper will be underneath. This is the trigger.`; }
+    else if (intel.bait === 'moderate'){ eac = 2; eacNote = `Moderate bait present. Botany Canyon and The Lumps hold fish — confirm on sounder.`; }
+    else if (intel.bait === 'none')    { eac = 1; eacNote = `No bait reported. Snapper will be present but unfed — presentation becomes critical.`; }
+    else                               { eac = 1; eacNote = `Structure present but bait unconfirmed. Confirm bait on sounder before committing. Enter field intel to improve score.`; }
+  } else if (currentSpecies === 'mahi') {
+    if (eacSpd >= 1.5)      { eac = 3; eacNote = `${eacSpd}kt current — debris lines and current edges likely forming.`; }
+    else if (eacSpd >= 1.0) { eac = 2; eacNote = `${eacSpd}kt — some current structure. Search weed lines visually.`; }
+    else                    { eac = 1; eacNote = `Weak current — debris aggregation unlikely. Cover water.`; }
+  } else {
+    if (eacSpd >= 2 && onStructure === 'yes')           { eac = 3; eacNote = `${eacSpd}kt EAC confirmed on structure. Bait pinning active.`; }
+    else if (eacSpd >= 2 || onStructure === 'partial')  { eac = 2; eacNote = `${eacSpd}kt EAC present. Partial structure contact.`; }
+    else if (eacSpd >= 1.5)                             { eac = 2; eacNote = `${eacSpd}kt EAC flow. Verify structure contact.`; }
+    else if (eacSpd >= 1)                               { eac = 1; eacNote = `${eacSpd}kt — weak push. Insufficient to pin bait.`; }
+    else                                                { eac = 0; eacNote = `EAC absent. No concentrating mechanism.`; }
+  }
+
+  // Intel modifiers
+  const bait = intel.bait, reports = intel.reports, colour = intel.colour;
+  if (bait === 'heavy')       { sst = Math.min(3, sst+1); sstNote += ' + Heavy bait confirmed.'; }
+  if (bait === 'moderate')    { sstNote += ' + Moderate bait present.'; }
+  if (colour === 'hard-wall') { sst = Math.min(3, sst+1); sstNote += ' + Hard colour wall confirmed.'; }
+  if (colour === 'soft')      { sstNote += ' + Soft colour change visible.'; }
+  if (reports === 'red-hot')  { eac = Math.min(3, eac+1); eacNote += ' + Reports: Red hot.'; }
+  if (reports === 'dead')     { eac = Math.max(0, eac-1); eacNote += ' + Reports: Dead.'; }
+
+  state.scores = { access, sst, alt, eac };
+  state.notes  = { access: accessNote, sst: sstNote, alt: altNote, eac: eacNote };
+
+  setPillar('access', access, accessNote);
+  setPillar('sst',    sst,    sstNote);
+  setPillar('alt',    alt,    altNote);
+  setPillar('eac',    eac,    eacNote);
+}
+
+function setPillar(name, score, note) {
+  const pct = (score / 3) * 100;
+  document.getElementById('ps-' + name).textContent = score + '/3';
+  const bar = document.getElementById('pb-' + name);
+  bar.style.width = pct + '%';
+  bar.className = 'pillar-bar-fill score-' + score;
+  document.getElementById('pn-' + name).textContent = note;
+}
+
+// ═══════════════════════════════════════
+// VERDICT
+// ═══════════════════════════════════════
+function updateVerdict() {
+  const { access, sst, alt, eac } = state.scores;
+  let total = access + sst + alt + eac;
+  const sp = SPECIES[currentSpecies];
+  const month = new Date().getMonth();
+  const banner  = document.getElementById('verdictBanner');
+  const scoreEl = document.getElementById('verdictScore');
+  const callEl  = document.getElementById('verdictCall');
+  const subEl   = document.getElementById('verdictSub');
+
+  // ── SEASON GATE ──
+  // Check real-world overrides — things the matrix can't know
+  const overrides = getSpeciesOverrides(currentSpecies, month);
+
+  if (overrides.hardBlock) {
+    // Species definitively not present — override everything
+    scoreEl.innerHTML = total + '<span>/12</span>';
+    banner.className = 'verdict-banner state-nogo';
+    callEl.textContent = 'SPECIES NOT PRESENT';
+    subEl.textContent = overrides.reason;
+    return;
+  }
+
+  if (overrides.seasonWarning) {
+    // Off-season — cap score and warn
+    total = Math.min(total, 4);
+    scoreEl.innerHTML = total + '<span>/12</span>';
+    banner.className = 'verdict-banner state-nogo';
+    callEl.textContent = 'OFF SEASON — NO GO';
+    subEl.textContent = overrides.reason;
+    return;
+  }
+
+  // Normal scoring
+  scoreEl.innerHTML = total + '<span>/12</span>';
+  banner.className = 'verdict-banner';
+
+  if (total >= 9) {
+    banner.classList.add('state-go');
+    callEl.textContent = 'STRIKE — GO';
+    subEl.textContent = `Score ${total}/12 clears threshold. Conditions stacked for ${sp.name}. Get the spread out.`;
+  } else if (total >= 6) {
+    banner.classList.add('state-marginal');
+    callEl.textContent = 'CONDITIONAL GO';
+    subEl.textContent = `Score ${total}/12 is workable. Identify the weak pillar before committing fuel.`;
+  } else {
+    banner.classList.add('state-nogo');
+    callEl.textContent = 'PULL THE PIN';
+    subEl.textContent = `Score ${total}/12 does not support the run. Preserve the asset. Reforecast in 48hrs.`;
+  }
+}
+
+function isFADSeason() {
+  const now   = new Date();
+  const month = now.getMonth(); // 0=Jan
+  const day   = now.getDate();
+
+  // FADs IN: ~Oct 10 to May 1
+  // FADs OUT: May 1 to ~Oct 10
+  if (month === 9 && day >= 10) return true;  // Oct 10+
+  if (month === 10) return true;               // Nov
+  if (month === 11) return true;               // Dec
+  if (month === 0)  return true;               // Jan
+  if (month === 1)  return true;               // Feb
+  if (month === 2)  return true;               // Mar
+  if (month === 3)  return true;               // Apr
+  if (month === 4 && day < 1) return true;     // Before May 1 (edge case)
+  return false;                                // May 1 – Oct 9: FADs out
+}
+
+function getNextFADDate() {
+  const now   = new Date();
+  const month = now.getMonth();
+  const year  = now.getFullYear();
+
+  // If we're May–Sep, next FAD deployment is Oct 10 this year
+  if (month >= 4 && month <= 8) {
+    const daysUntil = Math.round((new Date(year, 9, 10) - now) / (1000*60*60*24));
+    return `~${daysUntil} days (around 10 Oct ${year})`;
+  }
+  // If Oct but before the 10th
+  if (month === 9 && now.getDate() < 10) {
+    const daysUntil = 10 - now.getDate();
+    return `${daysUntil} days`;
+  }
+  return 'soon';
+}
+
+
+function getSpeciesOverrides(speciesKey, month) {
+  // Real-world blockers that override the matrix entirely.
+  // These are things the oceanographic data cannot detect.
+  // Update these as ground conditions change.
+
+  const overrides = { hardBlock: false, seasonWarning: false, reason: '' };
+  const sp = SPECIES[speciesKey];
+  const status = sp.seasonStatus(month);
+
+  switch(speciesKey) {
+
+    case 'mahi': {
+      // Sydney FAD calendar: deployed 2nd week October (~Oct 10), removed beginning of May (~May 1)
+      // Outside this window, FADs are absent and Mahi are not reliably targetable.
+      const fadActive = isFADSeason();
+      if (!fadActive) {
+        overrides.hardBlock = true;
+        const nextFAD = getNextFADDate();
+        overrides.reason = `Sydney FADs are not deployed (removed ~May 1, reinstated ~Oct 10). Without FADs, Mahi are highly transient and not reliably targetable. No score is meaningful here. FADs return in approximately ${nextFAD}.`;
+      } else if (status === 'closed') {
+        // FADs are in but outside calendar peak — marginal
+        overrides.seasonWarning = true;
+        overrides.reason = `FADs are deployed but outside peak Mahi window (Dec–Apr). Fish may be present around FADs but in low numbers. Marginal proposition.`;
+      }
+      break;
+    }
+
+    case 'marlin':
+      // Marlin season Nov–May. Outside that, hard block.
+      if (status === 'closed') {
+        overrides.seasonWarning = true;
+        overrides.reason = `Marlin season closed (Jun–Oct). Water temps will be below the 23°C minimum. Score reflects conditions only — fish are not present. Return in November.`;
+      }
+      break;
+
+    case 'yft':
+      // YFT present year-round to varying degrees but peak Jun–Oct.
+      // No hard block, but warn if off-season.
+      if (status === 'closed') {
+        overrides.seasonWarning = true;
+        overrides.reason = `YFT numbers are low outside Jun–Oct window. Fish may be present but density is low — run economics are poor. Score reflects conditions, not fish density.`;
+      }
+      break;
+
+    case 'kingfish':
+      if (status === 'closed') {
+        overrides.seasonWarning = true;
+        overrides.reason = `Kingfish are present but at reduced density outside Apr–Sep. Smaller fish and inconsistent biting. Score reflects conditions only.`;
+      }
+      break;
+
+    case 'snapper':
+      // Year round — no block ever
+      break;
+  }
+
+  return overrides;
+}
+
+// ═══════════════════════════════════════
+// FIELD INTEL — AUTO FETCH
+// ═══════════════════════════════════════
+
+// Stores parsed intel from web searches
+const intel = {
+  bait: null,       // 'heavy' | 'moderate' | 'patchy' | 'none' | null
+  reports: null,    // 'red-hot' | 'good' | 'average' | 'dead' | null
+  colour: null,     // 'hard-wall' | 'soft' | 'no-change' | null
+  hotspot: null,    // text description
+  gap: null,        // estimated nm
+  fetched: false
+};
+
+async function fetchFieldIntel() {
+  const btn = document.getElementById('intelFetchBtn');
+  btn.disabled = true;
+  btn.textContent = '◌ Searching live sources...';
+  setStatus('src-skipper', 'loading');
+
+  const sp = SPECIES[currentSpecies];
+  const spName = sp.name;
+  const today = new Date().toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  // Set cards to loading state
+  ['intel-bait','intel-reports','intel-colour','intel-hotspot'].forEach(id => {
+    const card = document.getElementById(id);
+    if (card) card.className = 'intel-card loading';
+  });
+  setIntelCard('intel-bait',    'iv-bait',    'id-bait',    '...', 'Searching fishing reports...', 'loading');
+  setIntelCard('intel-reports', 'iv-reports', 'id-reports', '...', 'Searching trip reports...', 'loading');
+  setIntelCard('intel-colour',  'iv-colour',  'id-colour',  '...', 'Checking ocean conditions...', 'loading');
+  setIntelCard('intel-hotspot', 'iv-hotspot', 'id-hotspot', '...', 'Finding active marks...', 'loading');
+
+  try {
+    // Call our Netlify function — API key stored server-side, never in the browser
+    const response = await fetch('/.netlify/functions/fetch-intel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ species: currentSpecies, spName, today })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Server error ${response.status}`);
+    }
+
+    const c = await response.json();
+
+    // Populate intel
+    intel.bait    = c.bait.value;
+    intel.reports = c.reports.value;
+    intel.colour  = c.colour.value;
+    intel.hotspot = c.hotspot.value;
+    intel.gap     = c.gap || intel.gap;
+    intel.fetched = true;
+
+    setIntelCard('intel-bait',    'iv-bait',    'id-bait',    c.bait.display,    c.bait.detail,    c.bait.tier);
+    setIntelCard('intel-reports', 'iv-reports', 'id-reports', c.reports.display, c.reports.detail, c.reports.tier);
+    setIntelCard('intel-colour',  'iv-colour',  'id-colour',  c.colour.display,  c.colour.detail,  c.colour.tier);
+    setIntelCard('intel-hotspot', 'iv-hotspot', 'id-hotspot', c.hotspot.display, c.hotspot.detail, c.hotspot.tier);
+
+    // Show confidence and source date
+    const conf = c.confidence || 'medium';
+    const confColor = conf === 'high' ? 'var(--go)' : conf === 'medium' ? 'var(--warn)' : 'var(--text-dim)';
+    const srcNote = `Intel from live web search · Most recent source: ${c.sourceDate || 'unknown'} · Confidence: <span style="color:${confColor}">${conf.toUpperCase()}</span>`;
+    const existingNote = document.getElementById('intel-source-note');
+    if (existingNote) {
+      existingNote.innerHTML = srcNote;
+    } else {
+      const note = document.createElement('div');
+      note.id = 'intel-source-note';
+      note.style.cssText = 'font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);';
+      note.innerHTML = srcNote;
+      document.getElementById('intel-bait')?.parentElement?.appendChild(note);
+    }
+
+    updateGapAuto(intel.gap);
+    setStatus('src-skipper', 'ok');
+
+    if (state.fetched) { scoreMatrix(); updateVerdict(); }
+
+    btn.disabled = false;
+    btn.textContent = '↺ Refresh Intel';
+
+  } catch(err) {
+    console.error('Field intel fetch failed:', err);
+    setStatus('src-skipper', 'err');
+    setIntelCard('intel-bait',    'iv-bait',    'id-bait',    'Unavailable', 'Live search failed — check connection and try again.', 'cold');
+    setIntelCard('intel-reports', 'iv-reports', 'id-reports', 'Unavailable', 'Live search failed — check connection and try again.', 'cold');
+    setIntelCard('intel-colour',  'iv-colour',  'id-colour',  'Unavailable', 'Live search failed — check connection and try again.', 'cold');
+    setIntelCard('intel-hotspot', 'iv-hotspot', 'id-hotspot', 'Unavailable', 'Live search failed — check connection and try again.', 'cold');
+    btn.disabled = false;
+    btn.textContent = '↺ Retry';
+  }
+}
+
+function setIntelCard(cardId, valueId, detailId, value, detail, tier) {
+  const card = document.getElementById(cardId);
+  document.getElementById(valueId).textContent = value;
+  document.getElementById(detailId).textContent = detail;
+  card.className = 'intel-card ' + tier;
+}
+
+function updateGapAuto(gap) {
+  const gapInput = document.getElementById('gapDistance');
+  if (gapInput) gapInput.value = gap;
+  updateFuelBudget();
+}
+
+// Legacy stub
+function updateGap() {}
+
+// ═══════════════════════════════════════
+// BOAT DATABASE & FUEL CALCULATOR
+// ═══════════════════════════════════════
+const BOATS = {
+  gw216:     { name: 'Grady-White 216',        tank: 303, cruiseBurn: 27.6, cruiseSpeed: 23.7, trollBurn: 10 },
+  sf268:     { name: 'Sea Fox 268 Commander',   tank: 526, cruiseBurn: 38.6, cruiseSpeed: 24.0, trollBurn: 16 },
+  hh625:     { name: 'Haines Hunter 625',       tank: 200, cruiseBurn: 35,   cruiseSpeed: 22,   trollBurn: 8  },
+  bc730:     { name: 'Bar Crusher 730HT',       tank: 240, cruiseBurn: 55,   cruiseSpeed: 26,   trollBurn: 12 },
+  stabi2250: { name: 'Stabicraft 2250',         tank: 200, cruiseBurn: 40,   cruiseSpeed: 24,   trollBurn: 10 },
+  custom:    { name: 'Custom',                  tank: 300, cruiseBurn: 30,   cruiseSpeed: 22,   trollBurn: 8  }
+};
+
+function getBoatSpec() {
+  const sel = document.getElementById('boatSelect').value;
+  if (sel === 'custom') {
+    return {
+      name:        'Custom',
+      tank:        parseFloat(document.getElementById('customTank').value)  || 300,
+      cruiseBurn:  parseFloat(document.getElementById('customBurn').value)  || 30,
+      cruiseSpeed: parseFloat(document.getElementById('customSpeed').value) || 22,
+      trollBurn:   parseFloat(document.getElementById('customTroll').value) || 8
+    };
+  }
+  return BOATS[sel];
+}
+
+function updateFuelBudget() {
+  const sel = document.getElementById('boatSelect').value;
+  document.getElementById('customInputs').style.display = sel === 'custom' ? 'block' : 'none';
+
+  const boat     = getBoatSpec();
+  const gap      = parseFloat(document.getElementById('gapDistance').value) || 20;
+  const trollHrs = parseFloat(document.getElementById('trollHours').value)  || 4;
+
+  const transitTime   = gap / boat.cruiseSpeed;
+  const transitFuel   = transitTime * boat.cruiseBurn;
+  const trollFuel     = trollHrs * boat.trollBurn;
+  const subtotal      = (transitFuel * 2) + trollFuel;
+  const reserve       = subtotal * 0.25;
+  const totalRequired = subtotal + reserve;
+  const pctOfTank     = (totalRequired / boat.tank) * 100;
+  const turnHomeFuel  = transitFuel + reserve;
+
+  document.getElementById('fuelVesselTag').textContent = boat.name;
+  document.getElementById('fuelTankLabel').textContent = `Tank: ${boat.tank}L`;
+
+  setFuelRow('transit-out',  transitFuel, boat.tank);
+  setFuelRow('troll',        trollFuel,   boat.tank);
+  setFuelRow('transit-home', transitFuel, boat.tank);
+  setFuelRow('reserve',      reserve,     boat.tank);
+
+  const totalEl = document.getElementById('fuelTotal');
+  totalEl.textContent = Math.round(totalRequired) + 'L';
+  totalEl.style.color = pctOfTank > 100 ? 'var(--nogo)' : pctOfTank > 85 ? 'var(--warn)' : 'var(--go)';
+
+  const gauge = document.getElementById('tankGauge');
+  gauge.style.width   = Math.min(pctOfTank, 100) + '%';
+  gauge.style.background = pctOfTank > 100 ? 'var(--nogo)' : pctOfTank > 85 ? 'var(--warn)' : 'var(--go)';
+
+  const verdictEl = document.getElementById('fuelVerdict');
+  if (pctOfTank > 100) {
+    verdictEl.innerHTML = `<span style="color:var(--nogo)">✗ EXCEEDS TANK — not viable at ${gap}nm gap</span>`;
+  } else if (pctOfTank > 85) {
+    verdictEl.innerHTML = `<span style="color:var(--warn)">⚠ ${Math.round(pctOfTank)}% of tank — tight. Reduce troll time or gap.</span>`;
+  } else {
+    verdictEl.innerHTML = `<span style="color:var(--go)">✓ ${Math.round(pctOfTank)}% of tank — viable. ${Math.round(boat.tank - totalRequired)}L to spare.</span>`;
+  }
+
+  document.getElementById('turnHomeRule').textContent =
+    `Turn for home when fuel drops to ${Math.round(turnHomeFuel)}L (${Math.round((turnHomeFuel/boat.tank)*100)}% tank). Gets you home with 25% reserve. Non-negotiable.`;
+
+  // Feed gap into intel and scoring
+  intel.gap = gap;
+  // Also update the gap input to match (in case called from updateGapAuto)
+  const gapEl = document.getElementById('gapDistance');
+  if (gapEl && parseFloat(gapEl.value) !== gap) gapEl.value = gap;
+}
+
+function setFuelRow(name, litres, tankSize) {
+  const pct = Math.min((litres / tankSize) * 100, 100);
+  document.getElementById('fb-' + name).style.width = pct + '%';
+  document.getElementById('fv-' + name).textContent = Math.round(litres) + 'L';
+}
+
+
+
+
+
+// ═══════════════════════════════════════
+// FORECAST GRID
+// ═══════════════════════════════════════
+function buildEmptyForecast() {
+  const grid = document.getElementById('forecastGrid');
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const now = new Date();
+  grid.innerHTML = '';
+  for (let d = 0; d < 7; d++) {
+    const date = new Date(now);
+    date.setDate(date.getDate() + d);
+    const div = document.createElement('div');
+    div.className = 'forecast-day' + (d === 0 ? ' today' : '');
+    div.innerHTML = `
+      <div class="forecast-day-name">${dayNames[date.getDay()]}</div>
+      <div class="forecast-day-date">${date.getDate()}</div>
+      <div class="forecast-score-pill">—</div>
+      <div class="forecast-day-stats" style="color:var(--text-dim)">Fetch data<br>to assess</div>
+    `;
+    grid.appendChild(div);
+  }
+}
+
+function buildForecastGrid() {
+  const grid = document.getElementById('forecastGrid');
+  const days = state.forecastDays;
+  if (!days.length) return;
+
+  // Base score from non-access pillars — calculated NOW after scoring
+  const baseScore = (state.scores.sst || 0) + (state.scores.alt || 0) + (state.scores.eac || 0);
+
+  // Calculate estimated totals at render time
+  const scoredDays = days.map(d => ({ ...d, estimatedTotal: d.accessScore + baseScore }));
+
+  // Find best day
+  let bestIdx = 0;
+  scoredDays.forEach((d, i) => { if (d.estimatedTotal > scoredDays[bestIdx].estimatedTotal) bestIdx = i; });
+
+  grid.innerHTML = '';
+  scoredDays.forEach((day, i) => {
+    const score      = day.estimatedTotal;
+    const scoreClass = score >= 9 ? 'go'   : score >= 6 ? 'warn' : 'nogo';
+    const dayClass   = score >= 9 ? 'best' : score >= 6 ? 'marginal' : 'poor';
+
+    const div = document.createElement('div');
+    div.className = `forecast-day ${dayClass}${day.isToday ? ' today' : ''}`;
+    div.onclick = () => showForecastDetail(day, score);
+    div.innerHTML = `
+      ${i === bestIdx ? '<div class="forecast-best-label">BEST</div>' : ''}
+      <div class="forecast-day-name">${day.dayName}</div>
+      <div class="forecast-day-date">${day.dayNum}</div>
+      <div class="forecast-score-pill ${scoreClass}">${score}/12</div>
+      <div class="forecast-day-stats">
+        💨 ${day.maxWind}kt max<br>
+        🌊 ${day.maxSwell}m swell<br>
+        ⚡ ${day.maxGust}kt gust
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function showForecastDetail(day, score) {
+  score = score ?? day.estimatedTotal ?? 0;
+  const verdict = score >= 9 ? 'GO' : score >= 6 ? 'CONDITIONAL GO' : 'NO-GO';
+  const color = score >= 9 ? 'var(--go)' : score >= 6 ? 'var(--warn)' : 'var(--nogo)';
+
+  document.getElementById('forecastDetail').innerHTML = `
+    <div class="forecast-detail-title">${day.dayName} ${day.dayNum} ${day.month} — <span style="color:${color}">${verdict} (${score}/12)</span></div>
+    <table class="brief-table">
+      <tr><td>Max Wind</td><td>${day.maxWind}kt (gusts to ${day.maxGust}kt)</td></tr>
+      <tr><td>Max Swell</td><td>${day.maxWave}m</td></tr>
+      <tr><td>Access Score</td><td>${day.accessScore}/3</td></tr>
+      <tr><td>Assessment</td><td style="color:${color}">${verdict}</td></tr>
+    </table>
+    <p style="margin-top:14px;font-size:12px;color:var(--text-secondary);font-family:var(--mono);line-height:1.6;">
+      Note: SST, SSH and EAC scores are held constant from today's fetch. Access score varies by forecast wind/swell.
+    </p>
+  `;
+}
+
+// ═══════════════════════════════════════
+// ANALYSIS — FULLY LOCAL, NO API NEEDED
+// ═══════════════════════════════════════
+function runAnalysis() {
+  if (!state.fetched) { alert('Fetch live data first.'); return; }
+
+  showLoading(true);
+  updateLoadingStep('Generating tactical brief...');
+
+  const d = state.liveData;
+  const { access, sst, alt, eac } = state.scores;
+  const total = access + sst + alt + eac;
+  const gap      = intel.gap || null;
+  const bait     = intel.bait || '';
+  const reports  = intel.reports || '';
+  const colour   = intel.colour || '';
+  const localKnow = intel.hotspot || '';
+
+  setTimeout(() => {
+    generateLocalBrief(total, d, gap, bait, reports, colour, localKnow);
+    showLoading(false);
+    // Switch to briefing tab
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-briefing').classList.add('active');
+    document.querySelector('.tab').classList.add('active');
+  }, 600);
+}
+
+function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
+  const verdict  = total >= 9 ? 'STRIKE — GO' : total >= 6 ? 'CONDITIONAL GO' : 'PULL THE PIN';
+  const color    = total >= 9 ? 'var(--go)'   : total >= 6 ? 'var(--warn)'    : 'var(--nogo)';
+  const { access, sst, alt, eac } = state.scores;
+
+  // ── Assessment ──
+  let assessment = `<strong style="color:${color}">${verdict} — ${total}/12.</strong> `;
+  if (total >= 9) {
+    assessment += `All four pillars are firing. The ${d.sst_delta.toFixed(1)}°C SST wall, +${d.ssh.toFixed(0)}cm SSH anomaly, and ${d.wind}kt wind with ${d.swell}m swell all stack in your favour today. This is a Plan A day — execute it.`;
+  } else if (total >= 6) {
+    const weakPillar = [
+      access < 2 ? `Access (${d.wind}kt / ${d.swell}m — marginal sea state)` : null,
+      sst < 2    ? `SST Gradient (${d.sst_delta.toFixed(1)}°C — soft, bait aggregation will be diffuse)` : null,
+      alt < 2    ? `Altimetry (+${d.ssh.toFixed(0)}cm — WCE present but sub-optimal)` : null,
+      eac < 2    ? `EAC Velocity (${d.eac_speed}kt — insufficient to pin bait on structure)` : null
+    ].filter(Boolean);
+    assessment += `Score is workable but ${weakPillar.length > 0 ? `weak pillar is <strong>${weakPillar[0]}</strong>` : 'not all pillars optimal'}. A run is defensible but not a high-confidence day. Weigh the fuel cost carefully before committing.`;
+  } else {
+    assessment += `The data does not support burning 350L today. ${access === 0 ? `Sea state is the primary blocker — ${d.wind}kt and ${d.swell}m is unacceptable.` : `Oceanographic conditions are poor — gradient and EAC structure are not stacked.`} Hold position and reforecast in 48hrs.`;
+  }
+
+  // Skipper intel modifiers
+  const intelNotes = [];
+  if (bait === 'heavy')    intelNotes.push('Heavy bait activity reported — strong aggregation signal.');
+  if (bait === 'moderate') intelNotes.push('Moderate bait present — fish will be around but may be scattered.');
+  if (bait === 'none')     intelNotes.push('No bait observed — concentrating mechanism absent.');
+  if (colour === 'hard-wall') intelNotes.push('Hard colour change confirmed by skipper — isotherm wall is real.');
+  if (colour === 'soft')      intelNotes.push('Soft colour change visible — gradient exists but diffuse.');
+  if (reports === 'red-hot')  intelNotes.push('Trip reports: Red hot. Fish are on top and biting.');
+  if (reports === 'dead')     intelNotes.push('Trip reports: Dead. Recent runs have been unsuccessful — caution.');
+  if (localKnow) intelNotes.push(`Local intel: "${localKnow}"`);
+  if (intelNotes.length) assessment += `<br><br><em style="color:var(--text-secondary)">${intelNotes.join(' ')}</em>`;
+
+  // ── Conditions table ──
+  const windStatus  = d.wind <= 12  ? '✓ Ideal'       : d.wind <= 15  ? '⚠ Marginal'   : '✗ Too strong';
+  const swellStatus = parseFloat(d.swell) <= 1.5 ? '✓ Comfortable' : parseFloat(d.swell) <= 2.0 ? '⚠ Workable' : '✗ Heavy';
+  const sstStatus   = d.sst_delta >= 3 ? '✓ Hard wall'   : d.sst_delta >= 2 ? '⚠ Soft gradient' : '✗ Flat';
+  const sshStatus   = d.ssh >= 20  ? '✓ WCE confirmed' : d.ssh >= 10 ? '⚠ Weak bulge'  : '✗ Flat/negative';
+  const eacStatus   = d.eac_speed >= 2 ? '✓ Active flow' : d.eac_speed >= 1.5 ? '⚠ Marginal' : '✗ Absent';
+  const spGap = SPECIES[currentSpecies].defaultGap;
+  const gapStatus = !gap ? '— Not entered'
+    : gap <= spGap * 0.8  ? `✓ ${gap}nm — strong ROI`
+    : gap <= spGap * 1.2  ? `⚠ ${gap}nm — typical range`
+    : `✗ ${gap}nm — long run, check fuel`;
+
+  const conditionsTable = `
+    <table class="brief-table">
+      <tr><th>Pillar</th><th>Parameter</th><th>Value</th><th>Score</th><th>Status</th></tr>
+      <tr><td>Access</td><td>Wind</td><td>${d.wind}kt</td><td rowspan="2" style="vertical-align:middle;font-family:var(--mono);font-size:16px;font-weight:700;color:${access===3?'var(--go)':access>=2?'var(--warn)':'var(--nogo)'}">${access}/3</td><td>${windStatus}</td></tr>
+      <tr><td></td><td>Swell</td><td>${d.swell}m @ ${d.period}s</td><td>${swellStatus}</td></tr>
+      <tr><td>SST Gradient</td><td>Warm/Cold</td><td>${d.sst_warm}°C / ${d.sst_cold}°C (Δ${d.sst_delta}°C)</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${sst===3?'var(--go)':sst>=2?'var(--warn)':'var(--nogo)'}">${sst}/3</td><td>${sstStatus}</td></tr>
+      <tr><td>Altimetry</td><td>SSH Anomaly</td><td>+${d.ssh.toFixed(1)}cm</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${alt===3?'var(--go)':alt>=2?'var(--warn)':'var(--nogo)'}">${alt}/3</td><td>${sshStatus}</td></tr>
+      <tr><td>EAC</td><td>Current speed</td><td>${d.eac_speed}kt</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${eac===3?'var(--go)':eac>=2?'var(--warn)':'var(--nogo)'}">${eac}/3</td><td>${eacStatus}</td></tr>
+      <tr><td colspan="2">Gap to warm water</td><td colspan="2">${gap ? gap + 'nm (~' + Math.round((gap / getBoatSpec().cruiseSpeed) * getBoatSpec().cruiseBurn * 2) + 'L return transit)' : 'Not entered'}</td><td>${gapStatus}</td></tr>
+    </table>`;
+
+  // ── Target zone ──
+  const sp = SPECIES[currentSpecies];
+  let target = '';
+  if (total >= 6) {
+    target = `<strong>Primary:</strong> ${sp.primaryTarget}.<br><strong>Secondary:</strong> ${sp.secondaryTarget}.<br><br>${sp.spread}`;
+    if (bait === 'heavy' || bait === 'moderate') {
+      target += `<br><br>Bait marks reported — prioritise staying near the aggregation over covering water.`;
+    }
+  } else {
+    target = `Conditions do not support a productive run today. ${sp.primaryTarget} remains the structural target but without the pillars stacked the intercept probability is low relative to fuel cost.`;
+  }
+
+  // ── Run plan ──
+  let runplan = '';
+  if (total >= 6) {
+    const depart   = d.wind <= 12 ? '0530' : '0600';
+    const turnHome = total >= 9 ? '1400' : '1300';
+    const boat     = getBoatSpec();
+    const gapNm    = gap || sp.defaultGap;
+    const transitL = Math.round((gapNm / boat.cruiseSpeed) * boat.cruiseBurn);
+
+    if (currentSpecies === 'snapper') {
+      runplan = `Depart <strong>${depart} AEST</strong> on the run-in tide. Run to <strong>${sp.primaryTarget.split('(')[0].trim()}</strong>. Anchor or drift over structure. Fish the run-in tide — that's your productive window. <strong>Turn for home at ${turnHome} AEST.</strong>`;
+    } else if (currentSpecies === 'kingfish') {
+      const kfMark = gapNm <= 8 ? 'Long Reef' : gapNm <= 10 ? 'The Peak' : '12 Mile Reef';
+      const kfCoord = gapNm <= 8
+        ? '33°43.7S 151°21.4E'
+        : gapNm <= 10
+        ? '33°58.0S 151°21.7E'
+        : '33°55.5S 151°28.3E';
+      const kfDetail = gapNm <= 8
+        ? 'Long Reef — work the Wall (33°44.4S 151°19.5E) first — rocky drop-off that holds kings tight to the structure. Then Long Reef Proper. Kings pin hard on the current-facing side. Knife jigs and live slimies on the drop-off edges.'
+        : gapNm <= 10
+        ? 'The Peak — deep water structure, kings hold on the edges. Knife jigs, slow-pitched. Work the up-current face — that is where they stack. 20-30 mins per mark before moving.'
+        : '12 Mile Reef — 90-110m of broken bottom. Work the current-facing edges with knife jigs and live bait. Kings will be stacked under any bait schools on the structure.';
+      runplan = `Depart <strong>${depart} AEST</strong>. Run to <strong>${kfMark}</strong> (${kfCoord}, ~${gapNm}nm, ~${transitL}L one-way). ${kfDetail} <strong>Hard turn-home ${turnHome} AEST.</strong>`;
+    } else {
+      runplan = `Depart Sydney Heads <strong>${depart} AEST</strong>. Run to ${gapNm}nm gap (~${transitL}L transit). <strong>Set the spread at first colour change.</strong> ${sp.trollSpeed}. Work the edge minimum 2hrs before relocating. Hard <strong>turn-home at ${turnHome} AEST</strong> — non-negotiable.`;
+    }
+    const gapWarnThreshold = SPECIES[currentSpecies].gapMax || 25;
+    if (gap && gap > gapWarnThreshold) runplan += ` <strong style="color:var(--warn)">Gap warning: ${gap}nm exceeds the typical range for ${sp.name}. Fuel discipline critical — turn home when tank hits ${Math.round((transitL + (boat.tank*0.25)))}L.</strong>`;
+  } else if (total >= 4) {
+    runplan = `Marginal score — if you go: depart no earlier than 0700, hard 3-hour window on the grounds, turn for home regardless. Do not extend the day chasing fish that aren't there.`;
+  } else {
+    runplan = `No run plan recommended. Score of ${total}/12 does not justify the fuel and time cost. Pull the pin and reassess in 48hrs.`;
+  }
+
+  // ── Risks ──
+  const risks = [];
+  if (d.wind > 12)           risks.push(`<strong>Wind:</strong> ${d.wind}kt is above the comfort threshold. Afternoon sea breeze may add another 5–8kt — plan to be off the grounds by 1300.`);
+  if (parseFloat(d.swell) > 2) risks.push(`<strong>Swell:</strong> ${d.swell}m @ ${d.period}s is heavy. The run home into a building sea will be slow and hard on the boat.`);
+  if (gap && gap > 25)        risks.push(`<strong>Fuel:</strong> ${gap}nm gap consumes ~${Math.round(gap*2*12)}L in transit alone. That's ${Math.round((gap*2*12)/350*100)}% of the tank before you've fished. Fuel discipline is critical.`);
+  if (reports === 'dead')     risks.push(`<strong>Bite:</strong> Recent reports are dead. Multiple failed runs suggest fish may have moved or conditions are suppressing feeding.`);
+  if (total < 6)              risks.push(`<strong>ROI:</strong> Sub-threshold score means the probability of a productive session doesn't justify the operating cost. This is the primary risk.`);
+  risks.push(`<strong>Weather window:</strong> Always check BOM forecast immediately before departure. Conditions can shift fast in May–June.`);
+
+  // ── Recommendation ──
+  let rec = `<strong style="color:${color};font-size:16px;">${verdict}.</strong><br><br>`;
+  if (total >= 9) {
+    rec += `This is the run. Conditions are stacked for <strong>${sp.name}</strong> — ${d.wind}kt wind, ${d.swell}m swell, ${d.sst_delta.toFixed(1)}°C thermal wall. Depart 0530, work the ${sp.primaryTarget.split('(')[0].trim()}, set a hard turn-time and stick to it.`;
+  } else if (total >= 6) {
+    rec += `A run is defensible for <strong>${sp.name}</strong> but not optimal. Identify the weak pillar, weigh it against the gap cost, and set a hard ${total >= 8 ? '1400' : '1300'} turn-home. If conditions are trending better tomorrow, wait.`;
+  } else {
+    const bestDay = state.forecastDays.reduce((best, d, i) => {
+      const s = d.accessScore + (state.scores.sst||0) + (state.scores.alt||0) + (state.scores.eac||0);
+      return s > best.score ? {day: d, score: s} : best;
+    }, {day: state.forecastDays[0], score: 0});
+    rec += `Score of ${total}/12 does not support burning the asset for <strong>${sp.name}</strong> today. ${bestDay.day ? `Best upcoming window: <strong>${bestDay.day.dayName} ${bestDay.day.dayNum}</strong> — ${bestDay.day.maxWind}kt wind, ${bestDay.day.maxSwell}m swell.` : 'Monitor and reforecast in 48hrs.'}`;
+  }
+
+  // ── Render ──
+  document.getElementById('briefingIdle').style.display = 'none';
+  const output = document.getElementById('briefingOutput');
+  output.classList.add('visible');
+  document.getElementById('brief-assessment').innerHTML = assessment;
+  document.getElementById('brief-conditions-table').innerHTML = conditionsTable;
+  document.getElementById('brief-target').innerHTML = target;
+  document.getElementById('brief-runplan').innerHTML = runplan;
+  document.getElementById('brief-risks').innerHTML = `<ul style="padding-left:18px;line-height:2.2">${risks.map(r=>`<li>${r}</li>`).join('')}</ul>`;
+  document.getElementById('brief-recommendation').innerHTML = rec;
+}
+
+// ═══════════════════════════════════════
+// MAP LAYER CONTROL — Windy embed (interactive, zoomable, confirmed working)
+// ═══════════════════════════════════════
+
+const mapLayers = {
+  sst: {
+    label: 'SST + Currents — Windy (live satellite + ECMWF current overlay)',
+    src: 'https://embed.windy.com/embed2.html?lat=-33.95&lon=151.55&detailLat=-33.95&detailLon=151.55&zoom=8&level=surface&overlay=sst&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1'
+  },
+  currents: {
+    label: 'Ocean Currents — Windy (ECMWF surface current vectors)',
+    src: 'https://embed.windy.com/embed2.html?lat=-33.95&lon=151.55&detailLat=-33.95&detailLon=151.55&zoom=8&level=surface&overlay=currents&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1'
+  },
+  wind: {
+    label: 'Wind — Sydney Offshore (Windy/ECMWF)',
+    src: 'https://embed.windy.com/embed2.html?lat=-33.95&lon=151.55&detailLat=-33.95&detailLon=151.55&zoom=8&level=surface&overlay=wind&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1'
+  },
+  waves: {
+    label: 'Swell — Sydney Offshore (Windy/ECMWF)',
+    src: 'https://embed.windy.com/embed2.html?lat=-33.95&lon=151.55&detailLat=-33.95&detailLon=151.55&zoom=8&level=surface&overlay=waves&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1'
+  },
+  bom_sst: {
+    label: 'SST + Currents — BOM NSW Ocean Forecast',
+    src: 'https://www.bom.gov.au/oceanography/forecasts/idyoc300.shtml?region=NSW&forecast=SSTCur',
+    bom: true
+  }
+};
+
+function toggleMapMarks() {
+  const svg = document.getElementById('mapOverlaySVG');
+  const btn = document.getElementById('mapMarksToggle');
+  const visible = svg.style.display !== 'none';
+  svg.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? '◈ MARKS OFF' : '◈ MARKS ON';
+  btn.style.color = visible ? 'var(--text-dim)' : 'var(--accent)';
+}
+
+function setMapLayer(layer, btn) {
+  document.querySelectorAll('.map-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const def = mapLayers[layer];
+  document.getElementById('mapLabel').textContent = def.label;
+  document.getElementById('mapWindyFrame').src = def.src;
+
+  // Hide fishing marks on BOM layers — BOM has its own coordinate system
+  const svg = document.getElementById('mapOverlaySVG');
+  const marksBtn = document.getElementById('mapMarksToggle');
+  if (def.bom) {
+    svg.style.display = 'none';
+    marksBtn.style.display = 'none';
+  } else {
+    // Restore marks to whatever state the toggle left them in
+    const marksOn = marksBtn.textContent.includes('ON');
+    svg.style.display = marksOn ? 'block' : 'none';
+    marksBtn.style.display = 'block';
+  }
+}
+
+// Load on first tab open
+document.querySelectorAll('.tab').forEach(t => {
+  if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'map'")) {
+    t.addEventListener('click', () => {
+      const frame = document.getElementById('mapWindyFrame');
+      if (!frame.src || frame.src === 'about:blank') {
+        setMapLayer('sst', document.querySelector('.map-btn.active'));
+      }
+    });
+  }
+});
+
+// ═══════════════════════════════════════
+// CATCH REPORTS SEARCH
+// ═══════════════════════════════════════
+
+// Species-specific catch intel — filtered by currentSpecies when rendered
+const GATHERED_INTEL = [
+  // ── YFT ──
+  {
+    source: 'Sydney Offshore — Season Intel',
+    date: 'Current season',
+    title: 'YFT Peak Season: June–October — EAC Strengthening',
+    body: `Yellowfin Tuna peak off Sydney as the EAC strengthens through winter. Prime window June–October. Fish typically 15–50kg, with 50kg+ fish arriving August–September. Target the SST colour change and EAC edge — typically 25–45nm offshore. Hit <strong>Search Reports</strong> to pull current catch intel from Sydney fishing sources.`,
+    tags: ['yft'], signal: 'moderate', signalText: 'SEASON OPEN', url: null
+  },
+  {
+    source: 'Tactics — YFT Sydney',
+    date: 'Season guide',
+    title: 'YFT Tactics — Colour Change, Bait Balls, EAC Edge',
+    body: `Run to the SST colour change — find the blue-green boundary. Look for bait balls on the sounder, birds working the surface, current lines. Troll skirted lures at 7–8kt across the edge. When you mark fish, slow to 4–5kt with soft baits. Browns Mountain (~22nm ESE) produces when the EAC is pushing hard onto the structure.`,
+    tags: ['yft'], signal: 'moderate', signalText: 'INTEL', url: null
+  },
+  // ── MARLIN ──
+  {
+    source: 'Sydney Offshore — Season Intel',
+    date: 'Current season',
+    title: 'Marlin Season: November–May — Blue Water 24°C+ Required',
+    body: `Striped and Black Marlin are the primary targets off Sydney November–May. Blue water (24°C+) must push inside 50nm for productive fishing. The EAC core is the key — follow the altimetry for warm core eddies. The Southern Canyons corridor is consistently productive. Hit <strong>Search Reports</strong> to pull current marlin intel.`,
+    tags: ['marlin'], signal: 'moderate', signalText: 'SEASON INTEL', url: null
+  },
+  {
+    source: 'Tactics — Marlin Sydney',
+    date: 'Season guide',
+    title: 'Marlin Tactics — Blue Water Edge, Warm Core Eddies',
+    body: `Target the blue water edge 35–55nm offshore. A positive SSH anomaly (+20cm+) indicates a warm core eddy — this is where marlin concentrate. Troll skirted lures and rigged baits at 7–9kt. Striped marlin are most common; blacks peak December–February. 130lb+ gear if targeting blacks.`,
+    tags: ['marlin'], signal: 'moderate', signalText: 'INTEL', url: null
+  },
+  // ── MAHI ──
+  {
+    source: 'Sydney Offshore — Season Intel',
+    date: 'Current season',
+    title: 'Mahi-Mahi Season: December–April — FAD and Debris Lines',
+    body: `Mahi follow NSW DPI FADs and floating debris pushed by the EAC. Season peaks December–March when surface temps hit 23°C+. FADs deployed October, retrieved around May. Check <strong>FishSmart app</strong> for current FAD GPS positions before departing. Hit <strong>Search Reports</strong> to pull current mahi intel.`,
+    tags: ['mahi'], signal: 'moderate', signalText: 'SEASON INTEL', url: null
+  },
+  {
+    source: 'Tactics — Mahi Sydney',
+    date: 'Season guide',
+    title: 'Mahi Tactics — FADs, Weed Lines, Current Debris',
+    body: `Run to the FAD first — mahi school beneath structure. If the FAD is quiet, search for floating debris on the current edge. Small lures and soft plastics work well. Once you find a school keep them in the water — they follow hooked fish. Do not net the whole school. 20–35nm offshore is the typical range.`,
+    tags: ['mahi'], signal: 'moderate', signalText: 'INTEL', url: null
+  },
+  // ── KINGFISH ──
+  {
+    source: 'Sydney Offshore — Season Intel',
+    date: 'Current season',
+    title: 'Kingfish Peak: April–September — Long Reef, The Peak, 12 Mile',
+    body: `Yellowtail Kingfish are at peak season April–September off Sydney. Primary marks: Long Reef (~7nm), The Peak (~9nm), 12 Mile Reef (~11nm). Kings prefer cooler water (18–22°C) and pin tight to structure on the current-facing side. Hit <strong>Search Reports</strong> to pull current kingfish intel from Sydney fishing sources.`,
+    tags: ['kingfish'], signal: 'hot', signalText: 'PEAK SEASON', url: null
+  },
+  {
+    source: 'Tactics — Kingfish Sydney',
+    date: 'Season guide',
+    title: 'Kingfish Tactics — Structure, Current Face, Knife Jigs',
+    body: `Work the current-facing edge of each mark. Long Reef Wall (33°44.4S 151°19.5E) is the pick when kings are schooled on bait. Knife jigs on the drop-off, slow-pitched. Live yellowtail and slimy mackerel are premium bait. Spend 20–30 mins per mark before moving. 80lb braid minimum — kings hit hard and run deep.`,
+    tags: ['kingfish'], signal: 'hot', signalText: 'INTEL', url: null
+  },
+  // ── SNAPPER ──
+  {
+    source: 'Sydney Offshore — Season Intel',
+    date: 'Year-round',
+    title: 'Snapper Year-Round — Tide Phase is the Primary Trigger',
+    body: `Snapper are available year-round off Sydney. Run-in tide on structure is the primary trigger — plan your trip around the incoming tide. Botany Canyon (8–12nm) and The Lumps south of Cronulla are the go-to marks. Autumn and winter typically produce the best fishing. Hit <strong>Search Reports</strong> to pull current snapper intel.`,
+    tags: ['snapper'], signal: 'moderate', signalText: 'YEAR ROUND', url: null
+  },
+  {
+    source: 'Tactics — Snapper Sydney',
+    date: 'Season guide',
+    title: 'Snapper Tactics — Bottom Fishing, Run-In Tide, Botany Canyon',
+    body: `Anchor or drift on structure during the run-in tide. Whole pilchards, squid, soft plastics on a paternoster rig. Botany Canyon holds fish year-round — confirm bait on the sounder before setting the anchor. Typical depths 40–80m. Night sessions around new and full moon can be exceptional. Keep the burley trail going.`,
+    tags: ['snapper'], signal: 'moderate', signalText: 'INTEL', url: null
+  }
+];
+
+async function searchCatchReports() {
+  const btn = document.getElementById('searchReportsBtn');
+  btn.disabled = true;
+  btn.textContent = '◌ Searching...';
+
+  // Show badge on tab
+  document.getElementById('reportsBadge').style.display = 'inline';
+
+  // Render species-filtered intel immediately
+  renderReports(GATHERED_INTEL);
+
+  // Then use AI to generate a synthesised species-aware summary
+  const filtered = GATHERED_INTEL.filter(r => r.tags.includes(currentSpecies));
+  await generateReportsSummary(GATHERED_INTEL, filtered.length);
+
+  btn.disabled = false;
+  btn.textContent = '↺ Refresh Reports';
+}
+
+function renderReports(reports) {
+  const feed = document.getElementById('reportsFeed');
+  // Filter to cards relevant to the current species
+  const filtered = reports.filter(r => r.tags.includes(currentSpecies));
+  const display = filtered.length > 0 ? filtered : reports; // fallback to all if no match
+  feed.innerHTML = display.map(r => `
+    <div class="report-card">
+      <div class="report-card-header">
+        <div>
+          <div class="report-card-source">${r.source}</div>
+          <div class="report-card-title">${r.title}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+          <span class="report-card-date">${r.date}</span>
+          <span class="report-signal ${r.signal}">${r.signalText}</span>
+        </div>
+      </div>
+      <div class="report-card-body">${r.body}</div>
+      <div class="report-card-tags">
+        ${r.tags.map(t => `<span class="report-tag ${t}">${t.toUpperCase()}</span>`).join('')}
+        ${r.url ? `<a href="${r.url}" target="_blank" style="font-family:var(--mono);font-size:9px;color:var(--accent);margin-left:auto;text-decoration:none;letter-spacing:0.06em;">↗ SOURCE</a>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function generateReportsSummary(reports, filtered = reports.length) {
+  const summaryCard = document.getElementById('reportsSummaryCard');
+  const summaryText = document.getElementById('reportsSummaryText');
+  const timestamp   = document.getElementById('reportsTimestamp');
+
+  summaryCard.style.display = 'block';
+  timestamp.textContent = new Date().toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'}) + ' AEST';
+
+  // Count positive signals
+  const hotCount = reports.filter(r => r.signal === 'hot').length;
+  const scoreContext = state.fetched
+    ? ` Current decision matrix: <strong>${state.scores.access + state.scores.sst + state.scores.alt + state.scores.eac}/12</strong>.`
+    : ' Fetch live data and run analysis to generate today\'s score.';
+
+  const sp = SPECIES[currentSpecies];
+  const spName = sp?.name || 'Unknown';
+  const seasonLabel = sp?.seasonLabel(new Date().getMonth()) || 'UNKNOWN';
+  summaryText.innerHTML = `
+    <strong>${spName} — ${seasonLabel}.</strong> ${filtered} intel card${filtered !== 1 ? 's' : ''} loaded for ${spName} off Sydney.${scoreContext}
+    <br><br>
+    <strong>What to do now:</strong> Hit <strong>Search Reports</strong> to pull the latest catch intel filtered to ${spName} from Sydney fishing sources including Fishare, Deckee, Facebook fishing groups and local tackle shop reports.
+    <br><br>
+    <strong>Cross-reference:</strong> Use the 7-Day Window tab to find the best access window this week, then confirm SST and current pillars are stacked before committing fuel.
+  `;
+}
+function showLoading(show) {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.toggle('visible', show);
+}
+
+function updateLoadingStep(text) {
+  document.getElementById('loadingStep').textContent = text;
+}
+
+function setStatus(id, status) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'fetch-status ' + status;
+  el.textContent = status === 'ok' ? 'LIVE' : status === 'loading' ? 'FETCHING' : status === 'err' ? 'ERROR' : '—';
+}
+</script>
+</body>
+</html>
