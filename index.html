@@ -2902,6 +2902,11 @@ function showForecastDetail(day, score) {
 function runAnalysis() {
   if (!state.fetched) { alert('Fetch live data first.'); return; }
 
+  // Recalculate scores for current species before generating brief
+  // This ensures banner and brief always match when species is switched
+  scoreMatrix();
+  updateVerdict();
+
   showLoading(true);
   updateLoadingStep('Generating tactical brief...');
 
@@ -2938,10 +2943,10 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
     const weakPillar = [
       access < 2 ? `Access (${d.wind}kt / ${d.swell}m — marginal sea state)` : null,
       sst < 2    ? `Colour change weak (${d.sst_delta.toFixed(1)}°C gradient — bait won't be concentrated)` : null,
-      alt < 2    ? `Altimetry (+${d.ssh.toFixed(0)}cm — WCE present but sub-optimal)` : null,
-      eac < 2    ? `EAC Velocity (${d.eac_speed}kt — insufficient to pin bait on structure)` : null
+      alt < 2    ? `Warm core eddy (+${d.ssh.toFixed(0)}cm — eddy's soft, not the wall you want)` : null,
+      eac < 2    ? `Current (${d.eac_speed}kt — not pushing hard enough to stack bait)` : null
     ].filter(Boolean);
-    assessment += `Score is workable but ${weakPillar.length > 0 ? `weak pillar is <strong>${weakPillar[0]}</strong>` : 'not all pillars optimal'}. A run is defensible but not a high-confidence day. Weigh the fuel cost carefully before committing.`;
+    assessment += `${weakPillar.length > 0 ? `${weakPillar[0]} is the weak link` : 'Not all pillars are stacked'}. It's a go if you're happy with the risk — but it's not a high-confidence day. Know your turn-home time before you leave the ramp.`;
   } else {
     assessment += `Not worth the fuel today. ${access === 0 ? `${d.wind}kt and ${d.swell}m — leave her on the trailer.` : `Water's cold and the EAC isn't stacking. Nothing out there to find right now.`} Check back in 48hrs — conditions are moving.`;
   }
@@ -2962,7 +2967,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   const windStatus  = d.wind <= 12  ? '✓ Ideal'       : d.wind <= 15  ? '⚠ Marginal'   : '✗ Too strong';
   const swellStatus = parseFloat(d.swell) <= 1.5 ? '✓ Comfortable' : parseFloat(d.swell) <= 2.0 ? '⚠ Workable' : '✗ Heavy';
   const sstStatus   = d.sst_delta >= 3 ? '✓ Hard wall'   : d.sst_delta >= 2 ? '⚠ Soft gradient' : '✗ Flat';
-  const sshStatus   = d.ssh >= 20  ? '✓ WCE confirmed' : d.ssh >= 10 ? '⚠ Weak bulge'  : '✗ Flat/negative';
+  const sshStatus   = d.ssh >= 20  ? '✓ Eddy confirmed' : d.ssh >= 10 ? '⚠ Soft eddy'  : '✗ No eddy structure';
   const eacStatus   = d.eac_speed >= 2 ? '✓ Active flow' : d.eac_speed >= 1.5 ? '⚠ Marginal' : '✗ Absent';
   const spGap = SPECIES[currentSpecies].defaultGap;
   const gapStatus = !gap ? '— Not entered'
@@ -2973,11 +2978,11 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   const conditionsTable = `
     <table class="brief-table">
       <tr><th>Pillar</th><th>Parameter</th><th>Value</th><th>Score</th><th>Status</th></tr>
-      <tr><td>Access</td><td>Wind</td><td>${d.wind}kt</td><td rowspan="2" style="vertical-align:middle;font-family:var(--mono);font-size:16px;font-weight:700;color:${access===3?'var(--go)':access>=2?'var(--warn)':'var(--nogo)'}">${access}/3</td><td>${windStatus}</td></tr>
+      <tr><td>Bar &amp; sea state</td><td>Wind</td><td>${d.wind}kt</td><td rowspan="2" style="vertical-align:middle;font-family:var(--mono);font-size:16px;font-weight:700;color:${access===3?'var(--go)':access>=2?'var(--warn)':'var(--nogo)'}">${access}/3</td><td>${windStatus}</td></tr>
       <tr><td></td><td>Swell</td><td>${d.swell}m @ ${d.period}s</td><td>${swellStatus}</td></tr>
       <tr><td>Water temp &amp; colour</td><td>Warm/Cold</td><td>${d.sst_warm}°C / ${d.sst_cold}°C (Δ${d.sst_delta}°C)</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${sst===3?'var(--go)':sst>=2?'var(--warn)':'var(--nogo)'}">${sst}/3</td><td>${sstStatus}</td></tr>
-      <tr><td>Altimetry</td><td>SSH Anomaly</td><td>+${d.ssh.toFixed(1)}cm</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${alt===3?'var(--go)':alt>=2?'var(--warn)':'var(--nogo)'}">${alt}/3</td><td>${sshStatus}</td></tr>
-      <tr><td>EAC</td><td>Current speed</td><td>${d.eac_speed}kt</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${eac===3?'var(--go)':eac>=2?'var(--warn)':'var(--nogo)'}">${eac}/3</td><td>${eacStatus}</td></tr>
+      <tr><td>Warm core eddy</td><td>Eddy height</td><td>+${d.ssh.toFixed(1)}cm</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${alt===3?'var(--go)':alt>=2?'var(--warn)':'var(--nogo)'}">${alt}/3</td><td>${sshStatus}</td></tr>
+      <tr><td>Current &amp; structure</td><td>Current speed</td><td>${d.eac_speed}kt</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${eac===3?'var(--go)':eac>=2?'var(--warn)':'var(--nogo)'}">${eac}/3</td><td>${eacStatus}</td></tr>
       <tr><td colspan="2">Gap to warm water</td><td colspan="2">${gap ? gap + 'nm (~' + Math.round((gap / getBoatSpec().cruiseSpeed) * getBoatSpec().cruiseBurn * 2) + 'L return transit)' : 'Not entered'}</td><td>${gapStatus}</td></tr>
     </table>`;
 
@@ -3025,14 +3030,14 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   } else if (total >= 4) {
     runplan = `Marginal score — if you go: depart no earlier than 0700, hard 3-hour window on the grounds, turn for home regardless. Do not extend the day chasing fish that aren't there.`;
   } else {
-    runplan = `No run plan recommended. Score of ${total}/12 does not justify the fuel and time cost. Pull the pin and reassess in 48hrs.`;
+    runplan = `No run today. Score of ${total}/12 — leave her on the trailer and check back in 48hrs.`;
   }
 
   // ── Risks ──
   const risks = [];
   if (d.wind > 12)           risks.push(`<strong>Wind:</strong> ${d.wind}kt is above the comfort threshold. Afternoon sea breeze may add another 5–8kt — plan to be off the grounds by 1300.`);
   if (parseFloat(d.swell) > 2) risks.push(`<strong>Swell:</strong> ${d.swell}m @ ${d.period}s is heavy. The run home into a building sea will be slow and hard on the boat.`);
-  if (gap && gap > 25)        risks.push(`<strong>Fuel:</strong> ${gap}nm gap consumes ~${Math.round(gap*2*12)}L in transit alone. That's ${Math.round((gap*2*12)/350*100)}% of the tank before you've fished. Fuel discipline is critical.`);
+  if (gap && gap > 25)        { const transitOnly = Math.round((gap / getBoatSpec().cruiseSpeed) * getBoatSpec().cruiseBurn * 2); risks.push(`<strong>Fuel:</strong> ${gap}nm is ~${transitOnly}L in transit alone before you've wet a line. Fuel discipline is critical — know your turn-home number.`); }
   if (reports === 'dead')     risks.push(`<strong>Bite:</strong> Recent reports are dead. Multiple failed runs suggest fish may have moved or conditions are suppressing feeding.`);
   if (total < 6)              risks.push(`<strong>ROI:</strong> The score doesn't justify the fuel bill. A bad day offshore costs the same as a good one.`);
   risks.push(`<strong>Weather window:</strong> Always check BOM forecast immediately before departure. Conditions can shift fast in May–June.`);
