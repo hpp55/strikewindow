@@ -2937,13 +2937,13 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   } else if (total >= 6) {
     const weakPillar = [
       access < 2 ? `Access (${d.wind}kt / ${d.swell}m — marginal sea state)` : null,
-      sst < 2    ? `SST Gradient (${d.sst_delta.toFixed(1)}°C — soft, bait aggregation will be diffuse)` : null,
+      sst < 2    ? `Colour change weak (${d.sst_delta.toFixed(1)}°C gradient — bait won't be concentrated)` : null,
       alt < 2    ? `Altimetry (+${d.ssh.toFixed(0)}cm — WCE present but sub-optimal)` : null,
       eac < 2    ? `EAC Velocity (${d.eac_speed}kt — insufficient to pin bait on structure)` : null
     ].filter(Boolean);
     assessment += `Score is workable but ${weakPillar.length > 0 ? `weak pillar is <strong>${weakPillar[0]}</strong>` : 'not all pillars optimal'}. A run is defensible but not a high-confidence day. Weigh the fuel cost carefully before committing.`;
   } else {
-    assessment += `The data does not support burning 350L today. ${access === 0 ? `Sea state is the primary blocker — ${d.wind}kt and ${d.swell}m is unacceptable.` : `Oceanographic conditions are poor — gradient and EAC structure are not stacked.`} Hold position and reforecast in 48hrs.`;
+    assessment += `Not worth the fuel today. ${access === 0 ? `${d.wind}kt and ${d.swell}m — leave her on the trailer.` : `Water's cold and the EAC isn't stacking. Nothing out there to find right now.`} Check back in 48hrs — conditions are moving.`;
   }
 
   // Skipper intel modifiers
@@ -2975,7 +2975,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
       <tr><th>Pillar</th><th>Parameter</th><th>Value</th><th>Score</th><th>Status</th></tr>
       <tr><td>Access</td><td>Wind</td><td>${d.wind}kt</td><td rowspan="2" style="vertical-align:middle;font-family:var(--mono);font-size:16px;font-weight:700;color:${access===3?'var(--go)':access>=2?'var(--warn)':'var(--nogo)'}">${access}/3</td><td>${windStatus}</td></tr>
       <tr><td></td><td>Swell</td><td>${d.swell}m @ ${d.period}s</td><td>${swellStatus}</td></tr>
-      <tr><td>SST Gradient</td><td>Warm/Cold</td><td>${d.sst_warm}°C / ${d.sst_cold}°C (Δ${d.sst_delta}°C)</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${sst===3?'var(--go)':sst>=2?'var(--warn)':'var(--nogo)'}">${sst}/3</td><td>${sstStatus}</td></tr>
+      <tr><td>Water temp &amp; colour</td><td>Warm/Cold</td><td>${d.sst_warm}°C / ${d.sst_cold}°C (Δ${d.sst_delta}°C)</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${sst===3?'var(--go)':sst>=2?'var(--warn)':'var(--nogo)'}">${sst}/3</td><td>${sstStatus}</td></tr>
       <tr><td>Altimetry</td><td>SSH Anomaly</td><td>+${d.ssh.toFixed(1)}cm</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${alt===3?'var(--go)':alt>=2?'var(--warn)':'var(--nogo)'}">${alt}/3</td><td>${sshStatus}</td></tr>
       <tr><td>EAC</td><td>Current speed</td><td>${d.eac_speed}kt</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${eac===3?'var(--go)':eac>=2?'var(--warn)':'var(--nogo)'}">${eac}/3</td><td>${eacStatus}</td></tr>
       <tr><td colspan="2">Gap to warm water</td><td colspan="2">${gap ? gap + 'nm (~' + Math.round((gap / getBoatSpec().cruiseSpeed) * getBoatSpec().cruiseBurn * 2) + 'L return transit)' : 'Not entered'}</td><td>${gapStatus}</td></tr>
@@ -2990,7 +2990,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
       target += `<br><br>Bait marks reported — prioritise staying near the aggregation over covering water.`;
     }
   } else {
-    target = `Conditions do not support a productive run today. ${sp.primaryTarget} remains the structural target but without the pillars stacked the intercept probability is low relative to fuel cost.`;
+    target = `Conditions do not support a productive run today. ${sp.primaryTarget} is still the mark — but without the water temperature and current right, the fish won't be there in numbers. Not worth the fuel.`;
   }
 
   // ── Run plan ──
@@ -3034,7 +3034,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   if (parseFloat(d.swell) > 2) risks.push(`<strong>Swell:</strong> ${d.swell}m @ ${d.period}s is heavy. The run home into a building sea will be slow and hard on the boat.`);
   if (gap && gap > 25)        risks.push(`<strong>Fuel:</strong> ${gap}nm gap consumes ~${Math.round(gap*2*12)}L in transit alone. That's ${Math.round((gap*2*12)/350*100)}% of the tank before you've fished. Fuel discipline is critical.`);
   if (reports === 'dead')     risks.push(`<strong>Bite:</strong> Recent reports are dead. Multiple failed runs suggest fish may have moved or conditions are suppressing feeding.`);
-  if (total < 6)              risks.push(`<strong>ROI:</strong> Sub-threshold score means the probability of a productive session doesn't justify the operating cost. This is the primary risk.`);
+  if (total < 6)              risks.push(`<strong>ROI:</strong> The score doesn't justify the fuel bill. A bad day offshore costs the same as a good one.`);
   risks.push(`<strong>Weather window:</strong> Always check BOM forecast immediately before departure. Conditions can shift fast in May–June.`);
 
   // ── Recommendation ──
@@ -3048,7 +3048,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
       const s = d.accessScore + (state.scores.sst||0) + (state.scores.alt||0) + (state.scores.eac||0);
       return s > best.score ? {day: d, score: s} : best;
     }, {day: state.forecastDays[0], score: 0});
-    rec += `Score of ${total}/12 does not support burning the asset for <strong>${sp.name}</strong> today. ${bestDay.day ? `Best upcoming window: <strong>${bestDay.day.dayName} ${bestDay.day.dayNum}</strong> — ${bestDay.day.maxWind}kt wind, ${bestDay.day.maxSwell}m swell.` : 'Monitor and reforecast in 48hrs.'}`;
+    rec += `Score of ${total}/12 — not worth burning the fuel for <strong>${sp.name}</strong> today. ${bestDay.day ? `Best upcoming window: <strong>${bestDay.day.dayName} ${bestDay.day.dayNum}</strong> — ${bestDay.day.maxWind}kt wind, ${bestDay.day.maxSwell}m swell.` : 'Monitor and reforecast in 48hrs.'}`;
   }
 
   // ── Render ──
