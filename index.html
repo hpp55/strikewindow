@@ -1475,8 +1475,7 @@
       </div>
     </div>
     <div class="verdict-right">
-      <button class="btn" id="fetchBtn" onclick="fetchLiveData()">⬇ Fetch Live Data</button>
-      <button class="btn primary" id="analyseBtn" onclick="runAnalysis()" disabled>◈ Run Analysis</button>
+      <button class="btn" id="fetchBtn" onclick="fetchLiveData()">↺ Refresh</button>
     </div>
   </div>
 
@@ -1750,7 +1749,7 @@
       <div class="briefing-idle" id="briefingIdle">
         <div class="briefing-idle-icon">◈</div>
         <h3>No assessment generated</h3>
-        <p>Hit Fetch, then Run Analysis. Add what you know from the water to sharpen the call.</p>
+        <p>Loading conditions... Add what you know from the water to sharpen the call.</p>
       </div>
       <div class="briefing-output" id="briefingOutput">
         <div class="brief-section">
@@ -1955,6 +1954,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateSeasonContext('yft'); // default species
   updateSolunar();
   setInterval(updateSolunar, 60000);
+  // Auto-fetch on load — no buttons needed
+  fetchLiveData();
 });
 
 // ═══════════════════════════════════════
@@ -2211,6 +2212,8 @@ async function fetchLiveData() {
 
     state.fetched = true;
     document.getElementById('analyseBtn').disabled = false;
+    // Auto-run analysis — no button press needed
+    runAnalysis();
 
   } catch(e) {
     console.error(e);
@@ -2477,7 +2480,7 @@ function setSpecies(speciesKey, btn) {
     buildForecastGrid();
     updateSeasonContext(speciesKey);
   } else {
-    // Auto-fetch on species select — one tap does everything
+    // Data not yet loaded — trigger fetch which auto-runs analysis on complete
     updateSeasonContext(speciesKey);
     fetchLiveData();
   }
