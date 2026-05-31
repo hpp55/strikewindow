@@ -1742,7 +1742,7 @@
       <button class="tab active" onclick="switchTab('briefing', this)">Tactical Brief</button>
       <button class="tab" onclick="switchTab('map', this)">SST Map</button>
       <button class="tab" onclick="switchTab('forecast', this)">7-Day Window</button>
-      <button class="tab" onclick="switchTab('reports', this)" id="reportsTab">Catch Reports <span id="reportsBadge" style="display:none;background:var(--go);color:var(--black);font-size: 13px;padding:1px 5px;border-radius:2px;margin-left:4px;font-family:var(--mono);">NEW</span></button>
+      <button class="tab" onclick="switchTab('reports', this)" id="reportsTab">Tactics &amp; Season</button>
     </div>
 
     <!-- Briefing Tab -->
@@ -1890,7 +1890,7 @@
     <div class="tab-content" id="tab-reports">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
         <div class="section-label" style="margin-bottom:0;">Local catch intelligence</div>
-        <button class="btn primary" onclick="searchCatchReports()" id="searchReportsBtn">⬇ Search Reports</button>
+        <!-- Search Reports removed — live intel is in the left sidebar Fetch Intel button -->
       </div>
 
       <!-- Intel Summary Card -->
@@ -2094,6 +2094,17 @@ function switchTab(name, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
+
+  // Initialise map iframe on first open — starts blank to avoid loading on every page load
+  if (name === 'map') {
+    const frame = document.getElementById('mapWindyFrame');
+    if (frame && (frame.src === 'about:blank' || frame.src === '' || frame.src.endsWith('about:blank'))) {
+      const activeMapBtn = document.querySelector('.map-btn.active');
+      const match = activeMapBtn?.getAttribute('onclick')?.match(/'([^']+)'/);
+      const firstLayer = match ? match[1] : 'currents';
+      setMapLayer(firstLayer, activeMapBtn);
+    }
+  }
 }
 
 // ═══════════════════════════════════════
@@ -2298,7 +2309,7 @@ const SPECIES = {
     pillar4: 'EAC 2kt+ pushing warm water onto shelf edge',
     // Target zones
     primaryTarget: 'SST colour change / EAC edge — typically 25–45nm offshore (34.0°S, 151.6°E approx)',
-    secondaryTarget: 'Long Reef Wall (33°44.4S 151°19.5E) — rocky drop-off, holds kings year round',
+    secondaryTarget: 'Browns Mountain (34°02S 151°39.5E) — ~22nm ESE · 800m seamount when EAC is pushing hard',
     trollSpeed: '7–8kt into the EAC',
     spread: 'Skirted lures + bibless minnows on the colour change. Spread wide — 20–40m back.',
     // Intel search terms
