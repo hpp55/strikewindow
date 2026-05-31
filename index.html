@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Strike Window">
 <meta name="description" content="Tactical offshore fishing decision app for Sydney anglers. Live Go/No-Go verdict before you burn the fuel.">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Strike Window — Tactical Offshore Fishing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
@@ -3566,6 +3569,151 @@ function setStatus(id, status) {
   if (!el) return;
   el.className = 'fetch-status ' + status;
   el.textContent = status === 'ok' ? 'LIVE' : status === 'loading' ? 'FETCHING' : status === 'err' ? 'ERROR' : '—';
+}
+
+// ═══════════════════════════════════════
+// PWA — SERVICE WORKER + INSTALL PROMPT
+// ═══════════════════════════════════════
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('[SW] Registered, scope:', reg.scope);
+        // If a new SW is waiting, prompt user to refresh
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateBanner();
+            }
+          });
+        });
+      })
+      .catch(err => console.warn('[SW] Registration failed:', err));
+  });
+}
+
+// Install prompt — capture the beforeinstallprompt event
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show the install banner after a short delay (don't interrupt initial load)
+  setTimeout(showInstallBanner, 8000);
+});
+
+function showInstallBanner() {
+  // Don't show if already installed (standalone mode)
+  if (window.matchMedia('(display-mode: standalone)').matches) return;
+  // Don't show if already dismissed this session
+  if (sessionStorage.getItem('sw-install-dismissed')) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'pwa-install-banner';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+      <span style="font-size:20px;flex-shrink:0;">◈</span>
+      <div style="min-width:0;">
+        <div style="font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);">Add to Home Screen</div>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--text-secondary);margin-top:2px;">One tap access — works offline</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <button onclick="installPWA()" style="font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;padding:8px 16px;border:1px solid var(--accent);background:rgba(0,180,216,0.12);color:var(--accent);cursor:pointer;">Install</button>
+      <button onclick="dismissInstallBanner()" style="font-family:var(--mono);font-size:13px;padding:8px 12px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;">✕</button>
+    </div>
+  `;
+  banner.style.cssText = `
+    position:fixed;bottom:0;left:0;right:0;z-index:500;
+    background:var(--deep);border-top:1px solid var(--border-light);
+    padding:14px 16px;display:flex;align-items:center;gap:12px;
+    box-shadow:0 -4px 20px rgba(0,0,0,0.4);
+    animation:slideUp 0.3s ease;
+  `;
+
+  // Add slide-up keyframe if not already present
+  if (!document.getElementById('pwa-styles')) {
+    const style = document.createElement('style');
+    style.id = 'pwa-styles';
+    style.textContent = `@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`;
+    document.head.appendChild(style);
+  }
+
+  document.body.appendChild(banner);
+}
+
+async function installPWA() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  console.log('[PWA] Install outcome:', outcome);
+  deferredInstallPrompt = null;
+  dismissInstallBanner();
+}
+
+function dismissInstallBanner() {
+  const banner = document.getElementById('pwa-install-banner');
+  if (banner) banner.remove();
+  sessionStorage.setItem('sw-install-dismissed', '1');
+}
+
+// iOS Safari — no beforeinstallprompt, show manual instructions instead
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+
+function isInStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+}
+
+if (isIOS() && !isInStandaloneMode()) {
+  setTimeout(() => {
+    if (sessionStorage.getItem('sw-install-dismissed')) return;
+    const banner = document.createElement('div');
+    banner.id = 'pwa-install-banner';
+    banner.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+        <span style="font-size:20px;flex-shrink:0;">◈</span>
+        <div style="min-width:0;">
+          <div style="font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);">Add to Home Screen</div>
+          <div style="font-family:var(--mono);font-size:12px;color:var(--text-secondary);margin-top:2px;">Tap <strong style="color:var(--text-primary);">Share ↑</strong> then <strong style="color:var(--text-primary);">Add to Home Screen</strong></div>
+        </div>
+      </div>
+      <button onclick="dismissInstallBanner()" style="font-family:var(--mono);font-size:13px;padding:8px 12px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;flex-shrink:0;">✕</button>
+    `;
+    banner.style.cssText = `
+      position:fixed;bottom:0;left:0;right:0;z-index:500;
+      background:var(--deep);border-top:1px solid var(--border-light);
+      padding:14px 16px;display:flex;align-items:center;gap:12px;
+      box-shadow:0 -4px 20px rgba(0,0,0,0.4);
+      animation:slideUp 0.3s ease;
+    `;
+    if (!document.getElementById('pwa-styles')) {
+      const style = document.createElement('style');
+      style.id = 'pwa-styles';
+      style.textContent = `@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`;
+      document.head.appendChild(style);
+    }
+    document.body.appendChild(banner);
+  }, 8000);
+}
+
+function showUpdateBanner() {
+  const banner = document.createElement('div');
+  banner.style.cssText = `
+    position:fixed;top:0;left:0;right:0;z-index:600;
+    background:var(--accent-dim);border-bottom:1px solid var(--accent);
+    padding:10px 16px;display:flex;align-items:center;justify-content:space-between;
+    font-family:var(--mono);font-size:13px;color:var(--text-primary);letter-spacing:0.06em;
+  `;
+  banner.innerHTML = `
+    <span>◈ Update available</span>
+    <button onclick="location.reload()" style="background:var(--accent);color:var(--black);border:none;padding:5px 12px;font-family:var(--mono);font-size:13px;cursor:pointer;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Reload</button>
+  `;
+  document.body.prepend(banner);
 }
 </script>
 </body>
