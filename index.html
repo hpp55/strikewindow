@@ -1199,153 +1199,276 @@
   .report-signal.moderate { color: var(--warn); background: rgba(255,171,0,0.08); border: 1px solid rgba(255,171,0,0.2); }
   .report-signal.slow { color: var(--text-dim); background: transparent; border: 1px solid var(--border); }
 
-  /* Responsive */
-  /* ── MOBILE RESPONSIVE ── */
+  /* ── RESPONSIVE ── */
+
+  /* Tablet — collapse to single column */
   @media (max-width: 900px) {
     .app-layout { grid-template-columns: 1fr; }
     .left-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none; overflow: visible; }
     .forecast-grid { grid-template-columns: repeat(4, 1fr); }
   }
 
+  /* ── MOBILE ── max-width: 600px ── */
   @media (max-width: 600px) {
-    /* Header — sticky so score stays visible while scrolling */
-    header { position: sticky; top: 0; z-index: 100; background: var(--deep); }
-    .app-header { padding: 10px 14px; }
-    .logo-mark { font-size: 22px; letter-spacing: 0.08em; }
-    .logo-sub { display: none; }
-    .header-status { gap: 8px; }
-    .header-btn { display: none; }
-    .status-pill { font-size: 16px; }
-    .date-display { font-size: 15px; }
 
-    /* Species bar — horizontal scroll, hidden scrollbar */
-    .species-bar { padding: 6px 12px; gap: 6px; border-bottom: 1px solid var(--border); }
+    /* ── HEADER: compact strip — logo + tide + status only ── */
+    header { position: sticky; top: 0; z-index: 100; background: var(--deep); }
+
+    .header-top {
+      padding: 10px 14px 8px;
+      align-items: center;         /* vertically centre logo and right cluster */
+    }
+
+    /* Logo: shrink to single line */
+    .logo { gap: 1px; }
+    .logo-mark { font-size: 24px; letter-spacing: 0.08em; }
+    .logo-sub { display: none; }
+    .logo-tagline { display: none; }
+
+    /* Header right: hide date + bite windows, keep live status + tide */
+    .header-status { gap: 10px; align-items: center; }
+    .date-display { display: none; }
+
+    /* Hide bite-windows block (moon/solunar) — keep only status dot + tide */
+    .header-bite-windows { display: none !important; }
+    /* Tighten the meta wrapper gap */
+    .header-meta { gap: 10px !important; }
+
+    /* Keep tide meter but tighten it */
+    .tide-meter {
+      display: flex !important;   /* override the hide rule at 600px */
+      padding-left: 10px;
+      border-left: 1px solid var(--border);
+      gap: 6px;
+    }
+    .tide-bar-track { height: 22px; }
+    .tide-label { font-size: 11px; }
+    .tide-value { font-size: 15px; }
+    .tide-direction { font-size: 12px; }
+
+    .status-pill { font-size: 14px; }
+    .status-dot { width: 7px; height: 7px; }
+
+    /* ── SPECIES BAR: 2-column full-width grid ── */
+    .species-bar {
+      padding: 10px 12px;
+      gap: 8px;
+      flex-direction: column;
+      align-items: stretch;
+    }
     .species-label { display: none; }
-    .species-options { gap: 5px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
-    .species-options::-webkit-scrollbar { display: none; }
-    .species-btn { padding: 7px 13px; flex-shrink: 0; min-height: 38px; }
-    .species-name { font-size: 16px; white-space: nowrap; }
-    .species-season { display: none; }
     .species-status { display: none; }
 
-    /* Verdict banner — score+text top row, buttons below in 50/50 grid */
-    .verdict-banner { padding: 14px 16px; flex-direction: column; gap: 12px; align-items: stretch; }
-    .verdict-left { gap: 16px; align-items: center; }
-    .verdict-score { font-size: 52px; line-height: 1; min-width: 64px; }
-    .verdict-score span { font-size: 22px; }
-    .verdict-call { font-size: 18px; letter-spacing: 0.06em; }
-    .verdict-sub { font-size: 16px; line-height: 1.4; margin-top: 3px; opacity: 0.85; }
-    .verdict-right { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-    .verdict-right .btn { width: 100%; text-align: center; padding: 12px 8px; font-size: 16px; justify-content: center; min-height: 44px; }
+    .species-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      flex-wrap: unset;
+      overflow: visible;
+      padding-bottom: 0;
+    }
 
-    /* App layout — single column */
+    .species-btn {
+      width: 100%;
+      padding: 12px 14px;
+      min-height: 52px;
+      flex-shrink: unset;
+      justify-content: flex-start;
+      gap: 8px;
+    }
+
+    .species-icon { font-size: 16px; }
+
+    .species-name {
+      font-size: 15px;
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    /* Show season in a muted smaller line */
+    .species-season {
+      display: block;
+      font-size: 11px;
+      opacity: 0.65;
+      letter-spacing: 0.04em;
+    }
+
+    /* Stack icon + text vertically inside each button */
+    .species-btn {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+    .species-icon { font-size: 18px; margin-bottom: 2px; }
+
+    /* ── VERDICT BANNER ── */
+    .verdict-banner {
+      padding: 14px 14px;
+      flex-direction: column;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .verdict-left { gap: 14px; align-items: center; }
+    .verdict-score { font-size: 56px; line-height: 1; min-width: 70px; }
+    .verdict-score span { font-size: 24px; }
+    .verdict-call { font-size: 22px; letter-spacing: 0.06em; }
+    .verdict-sub { font-size: 14px; line-height: 1.45; margin-top: 3px; opacity: 0.85; }
+    .verdict-right { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+    .verdict-right .btn {
+      width: 100%;
+      text-align: center;
+      padding: 13px 8px;
+      font-size: 15px;
+      justify-content: center;
+      min-height: 48px;
+    }
+
+    /* ── APP LAYOUT: single column, left-panel as card block ── */
     .app-layout { grid-template-columns: 1fr; gap: 0; }
-    .left-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none; overflow: visible; padding: 16px; }
+
+    .left-panel {
+      border-right: none;
+      border-bottom: 3px solid var(--border);
+      max-height: none;
+      overflow: visible;
+      padding: 0;                /* panel-section padding handles inner spacing */
+    }
+
+    .panel-section { padding: 16px 14px; }
+
     .right-panel { padding: 0; }
 
-    /* Section labels */
-    .section-label { font-size: 15px; letter-spacing: 0.1em; margin-bottom: 12px; }
+    /* ── SECTION LABELS ── */
+    .section-label { font-size: 13px; letter-spacing: 0.12em; margin-bottom: 12px; }
 
-    /* Metrics grid — 3 columns, readable sizes */
-    .live-data-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
-    .live-metric { padding: 10px 10px; }
-    .live-metric-label { font-size: 15px; letter-spacing: 0.06em; margin-bottom: 3px; }
-    .live-metric-value { font-size: 22px; line-height: 1.1; }
-    .live-metric-unit { font-size: 15px; margin-top: 2px; }
+    /* ── CONDITIONS TILES: 2-col grid, arm's-length readable ── */
+    .live-data-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 8px;
+    }
+    .live-metric { padding: 14px 12px; }
+    .live-metric-label { font-size: 11px; letter-spacing: 0.1em; margin-bottom: 5px; }
+    .live-metric-value { font-size: 32px; line-height: 1; }
+    .live-metric-unit { font-size: 12px; margin-top: 3px; }
 
-    /* Fetch rows */
-    .fetch-row { font-size: 16px; padding: 5px 0; }
-    .fetch-status { font-size: 15px; }
+    /* ── DATA FETCH STATUS ROWS ── */
+    .fetch-row { font-size: 13px; padding: 6px 0; }
+    .fetch-status { font-size: 12px; }
 
-    /* Decision matrix */
+    /* ── DECISION MATRIX PILLARS ── */
     .pillar { padding: 12px 0; }
-    .pillar-name { font-size: 16px; letter-spacing: 0.04em; }
-    .pillar-score { font-size: 15px; }
-    .pillar-note { font-size: 16px; line-height: 1.5; margin-top: 5px; }
-    .pillar-bar-track { height: 3px; margin-top: 6px; }
+    .pillar-name { font-size: 15px; letter-spacing: 0.03em; }
+    .pillar-score { font-size: 14px; }
+    .pillar-note { font-size: 13px; line-height: 1.55; margin-top: 6px; }
+    .pillar-bar-track { height: 4px; margin-top: 8px; }
 
-    /* Tab bar — scrollable, large tap targets */
-    .tab-bar { padding: 0 14px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    /* ── TAB BAR: scrollable, generous tap targets ── */
+    .tab-bar {
+      padding: 0 12px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
     .tab-bar::-webkit-scrollbar { display: none; }
-    .tab { padding: 14px 16px; font-size: 16px; white-space: nowrap; flex-shrink: 0; min-height: 44px; display: flex; align-items: center; }
+    .tab {
+      padding: 15px 16px;
+      font-size: 14px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+    }
 
-    /* Tab content */
-    .tab-content { padding: 16px; }
+    /* ── TAB CONTENT ── */
+    .tab-content { padding: 16px 14px; }
 
-    /* Tactical brief text */
-    .brief-text { font-size: 15px; line-height: 1.8; }
-    .brief-heading { font-size: 16px; letter-spacing: 0.15em; }
+    /* ── TACTICAL BRIEF TEXT ── */
+    .brief-text { font-size: 15px; line-height: 1.85; }
+    .brief-heading { font-size: 13px; letter-spacing: 0.18em; }
 
-    /* Forecast grid */
-    .forecast-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
-    .forecast-day { padding: 10px 6px; }
-    .forecast-day-name { font-size: 15px; }
+    /* ── FORECAST GRID: 4-across (day name + date + pill) ── */
+    .forecast-grid { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+    .forecast-day { padding: 10px 5px; }
+    .forecast-day-name { font-size: 11px; letter-spacing: 0.06em; }
     .forecast-day-date { font-size: 20px; }
-    .forecast-day-stats { font-size: 15px; line-height: 1.5; }
-    .forecast-score-pill { font-size: 16px; }
+    .forecast-day-stats { font-size: 11px; line-height: 1.55; }
+    .forecast-score-pill { font-size: 13px; padding: 2px 6px; }
 
-    /* Brief table — hide Parameter column on mobile, stack Score into Value cell */
-    .brief-table { font-size: 15px; width: 100%; }
+    /* ── BRIEF TABLE: hide middle Parameter column ── */
+    .brief-table { font-size: 13px; width: 100%; }
     .brief-table th, .brief-table td { padding: 8px 8px; }
     .brief-table th:nth-child(2),
-    .brief-table td:nth-child(2) { display: none; } /* hide Parameter col */
-    .brief-table th:nth-child(3) { content: 'Conditions'; }
+    .brief-table td:nth-child(2) { display: none; }
 
-    /* Solunar on small screens — tighten up */
+    /* ── SOLUNAR ── */
     #solunarWindows { font-size: 12px !important; }
-    #moonPhase { font-size: 15px !important; }
-
-    /* Map tab */
-    .map-controls { flex-wrap: wrap; gap: 6px; padding: 12px 14px; }
-    .map-btn { font-size: 16px; padding: 7px 10px; min-height: 36px; }
-    .map-container { height: 420px; }
-
-    /* Fuel budget */
-    .fuel-row-label { width: 90px; font-size: 16px; }
-    .fuel-row-val { font-size: 16px; }
-
-    /* Intel cards */
-    .intel-card { padding: 12px 14px; }
-    .intel-card-label { font-size: 16px; }
-    .intel-card-value { font-size: 16px; }
-    .intel-card-detail { font-size: 16px; }
-
-    /* Form inputs — 16px prevents iOS auto-zoom */
-    .select-field, .input-field { font-size: 16px; min-height: 44px; }
-    .input-label { font-size: 16px; }
-
-    /* Report cards */
-    .report-card-title { font-size: 15px; }
-    .report-card-body { font-size: 16px; }
-
-    /* General buttons */
-    .btn { min-height: 44px; }
-  }
-
-  @media (max-width: 390px) {
-    /* Small phones — iPhone SE / compact Androids */
-    .verdict-score { font-size: 44px; }
-    .verdict-call { font-size: 16px; }
-    .live-metric-value { font-size: 19px; }
-    .tab { padding: 13px 13px; font-size: 16px; }
-    .species-btn { padding: 6px 10px; }
-    .species-name { font-size: 16px; }
-    /* Bite windows — very compact on SE */
-    #solunarWindows { font-size: 11px !important; }
     #moonPhase { font-size: 14px !important; }
-    .logo-mark { font-size: 26px !important; }
-    .logo-tagline { display: none; } /* hide tagline on very small screens */
+
+    /* ── MAP TAB ── */
+    .map-controls { flex-wrap: wrap; gap: 6px; }
+    .map-btn { font-size: 13px; padding: 9px 11px; min-height: 40px; }
+    .map-container { height: 380px; }
+
+    /* ── FUEL BUDGET ── */
+    .fuel-row-label { width: 90px; font-size: 13px; }
+    .fuel-row-val { font-size: 13px; }
+    .fuel-row { font-size: 13px; }
+
+    /* ── INTEL CARDS ── */
+    .intel-card { padding: 12px 12px; }
+    .intel-card-label { font-size: 11px; letter-spacing: 0.1em; }
+    .intel-card-value { font-size: 17px; }
+    .intel-card-detail { font-size: 13px; line-height: 1.5; }
+
+    /* ── FORM INPUTS: 16px prevents iOS auto-zoom ── */
+    .select-field, .input-field, .textarea-field { font-size: 16px; min-height: 44px; }
+    .input-label { font-size: 13px; }
+
+    /* ── REPORT CARDS ── */
+    .report-card { padding: 14px 12px; }
+    .report-card-source { font-size: 11px; }
+    .report-card-title { font-size: 15px; }
+    .report-card-body { font-size: 14px; line-height: 1.7; }
+    .report-card-date { font-size: 12px; }
+    .report-signal { font-size: 11px; }
+
+    /* ── GENERAL BUTTONS ── */
+    .btn { min-height: 48px; font-size: 15px; }
+
+    /* ── GAP DISPLAY ── */
+    .gap-value { font-size: 20px; }
+    .gap-meta { font-size: 12px; }
   }
 
-  /* Landscape phone — restore two-column when rotated */
+  /* ── SMALL PHONES: iPhone SE / compact Androids ── */
+  @media (max-width: 390px) {
+    .logo-mark { font-size: 20px !important; }
+    .verdict-score { font-size: 48px; }
+    .verdict-call { font-size: 19px; }
+    .live-metric-value { font-size: 27px; }
+    .tab { padding: 14px 13px; font-size: 13px; }
+    .species-btn { min-height: 48px; }
+    .species-name { font-size: 14px; }
+    .species-season { font-size: 10px; }
+    #solunarWindows { font-size: 11px !important; }
+    #moonPhase { font-size: 13px !important; }
+  }
+
+  /* ── LANDSCAPE PHONE: restore two-column when rotated ── */
   @media (max-height: 500px) and (max-width: 900px) {
     .verdict-banner { padding: 8px 16px; flex-direction: row; align-items: center; gap: 16px; }
     .verdict-right { display: flex; gap: 8px; width: auto; }
-    .verdict-right .btn { width: auto; padding: 8px 14px; font-size: 16px; min-height: 38px; }
+    .verdict-right .btn { width: auto; padding: 8px 14px; font-size: 15px; min-height: 38px; }
     .verdict-score { font-size: 38px; }
     .verdict-call { font-size: 16px; }
     .app-layout { grid-template-columns: 300px 1fr; }
     .left-panel { border-right: 1px solid var(--border); border-bottom: none; overflow-y: auto; max-height: calc(100vh - 120px); }
+    /* Restore species bar to horizontal in landscape */
+    .species-options { display: flex; flex-wrap: nowrap; overflow-x: auto; }
+    .species-btn { flex-direction: row; align-items: center; min-height: 38px; padding: 6px 12px; }
+    .species-season { display: none; }
   }
 
   /* Data fetch status */
@@ -1403,9 +1526,9 @@
       <span id="liveStatusText">No data</span>
     </div>
     <div class="date-display" id="dateDisplay">--</div>
-    <div style="display:flex;align-items:center;gap:20px;">
+    <div class="header-meta" style="display:flex;align-items:center;gap:20px;">
       <!-- Moon phase + solunar -->
-      <div style="text-align:right;">
+      <div class="header-bite-windows" style="text-align:right;">
         <div style="font-family:var(--mono);font-size: 15px;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">Bite Windows</div>
         <div id="moonPhase" style="font-family:var(--mono);font-size:16px;color:var(--text-secondary);margin-bottom:3px;">—</div>
         <div id="solunarWindows" style="font-family:var(--mono);font-size: 15px;line-height:1.8;">—</div>
