@@ -1284,9 +1284,16 @@
     .forecast-day-stats { font-size: 15px; line-height: 1.5; }
     .forecast-score-pill { font-size: 16px; }
 
-    /* Brief table */
-    .brief-table { font-size: 16px; }
-    .brief-table th, .brief-table td { padding: 8px 10px; }
+    /* Brief table — hide Parameter column on mobile, stack Score into Value cell */
+    .brief-table { font-size: 15px; width: 100%; }
+    .brief-table th, .brief-table td { padding: 8px 8px; }
+    .brief-table th:nth-child(2),
+    .brief-table td:nth-child(2) { display: none; } /* hide Parameter col */
+    .brief-table th:nth-child(3) { content: 'Conditions'; }
+
+    /* Solunar on small screens — tighten up */
+    #solunarWindows { font-size: 12px !important; }
+    #moonPhase { font-size: 15px !important; }
 
     /* Map tab */
     .map-controls { flex-wrap: wrap; gap: 6px; padding: 12px 14px; }
@@ -1323,6 +1330,11 @@
     .tab { padding: 13px 13px; font-size: 16px; }
     .species-btn { padding: 6px 10px; }
     .species-name { font-size: 16px; }
+    /* Bite windows — very compact on SE */
+    #solunarWindows { font-size: 11px !important; }
+    #moonPhase { font-size: 14px !important; }
+    .logo-mark { font-size: 26px !important; }
+    .logo-tagline { display: none; } /* hide tagline on very small screens */
   }
 
   /* Landscape phone — restore two-column when rotated */
@@ -2499,8 +2511,8 @@ function scoreMatrix() {
     const warmOk = d.sst_warm >= sp.sstWarmMin;
     if (warmOk && delta >= sp.sstDeltaIdeal)    { sst = 3; sstNote = `${d.sst_warm}°C meets ${d.sst_cold}°C — ${delta.toFixed(1)}° colour change. That's your edge, fish it.`; }
     else if (warmOk && delta >= sp.sstDeltaMin) { sst = 2; sstNote = `${d.sst_warm}°C offshore, ${d.sst_cold}°C inshore — ${delta.toFixed(1)}° gradient. Soft edge, worth a look but not a hard wall.`; }
-    else if (delta >= sp.sstDeltaMin)           { sst = 1; sstNote = `${d.sst_warm}°C — a touch cool for ${sp.name}. Looking for ${sp.sstWarmMin}°C+ to fire them up.`; }
-    else                                        { sst = 0; sstNote = `${d.sst_warm}°C — water's too cold for ${sp.name}. Need ${sp.sstWarmMin}°C+ to find fish.`; }
+    else if (warmOk)                            { sst = 1; sstNote = `${d.sst_warm}°C — temp is right for ${sp.name} but the gradient is flat. No colour change means bait won't be concentrated.`; }
+    else                                        { sst = 0; sstNote = `${d.sst_warm}°C — too cold for ${sp.name}. Need ${sp.sstWarmMin}°C+ and a colour change to find fish.`; }
   }
 
   // Pillar 3: Altimetry / Tide
