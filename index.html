@@ -19,9 +19,9 @@
     --panel: #151d25;
     --border: #1e2d3a;
     --border-light: #243645;
-    --text-primary: #c8d8e4;
-    --text-secondary: #6a8a9e;
-    --text-dim: #3a5568;
+    --text-primary: #dce8f0;
+    --text-secondary: #9ab8c8;
+    --text-dim: #6a8a9e;
     --accent: #00b4d8;
     --accent-dim: #0077a0;
     --go: #00e676;
@@ -64,37 +64,55 @@
   /* ── HEADER ── */
   header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 28px;
-    border-bottom: 1px solid var(--border);
+    flex-direction: column;
+    padding: 0;
+    border-bottom: 2px solid var(--border);
     background: var(--deep);
     position: sticky;
     top: 0;
     z-index: 100;
   }
 
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 14px 28px 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .logo {
     display: flex;
-    align-items: baseline;
-    gap: 12px;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .logo-mark {
     font-family: var(--display);
     font-weight: 900;
-    font-size: 32px;
+    font-size: 38px;
     letter-spacing: 0.12em;
     color: var(--accent);
     text-transform: uppercase;
+    line-height: 1;
   }
 
   .logo-sub {
     font-family: var(--mono);
     font-size: 15px;
-    color: var(--text-secondary);
-    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    letter-spacing: 0.18em;
     text-transform: uppercase;
+  }
+
+  .logo-tagline {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.7;
   }
 
   .header-status {
@@ -108,7 +126,7 @@
     align-items: center;
     gap: 6px;
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -134,7 +152,7 @@
 
   .date-display {
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text-secondary);
   }
 
@@ -181,7 +199,7 @@
 
   .tide-label {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-dim);
@@ -190,14 +208,14 @@
   .tide-value {
     font-family: var(--display);
     font-weight: 700;
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-primary);
     line-height: 1;
   }
 
   .tide-direction {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
@@ -295,7 +313,7 @@
 
   .verdict-sub {
     font-family: var(--body);
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 300;
     color: var(--text-secondary);
     max-width: 500px;
@@ -309,7 +327,7 @@
   .btn {
     font-family: var(--display);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     padding: 12px 24px;
@@ -357,7 +375,7 @@
 
   .section-label {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-dim);
@@ -391,7 +409,7 @@
   .pillar-name {
     font-family: var(--display);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--text-primary);
@@ -399,7 +417,7 @@
 
   .pillar-score {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-secondary);
   }
 
@@ -423,7 +441,7 @@
   .pillar-bar-fill.score-3 { background: var(--go); }
 
   .pillar-note {
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-secondary);
     line-height: 1.5;
     font-family: var(--mono);
@@ -438,7 +456,7 @@
 
   .input-label {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -452,7 +470,7 @@
     border: 1px solid var(--border);
     color: var(--text-primary);
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     padding: 9px 12px;
     outline: none;
     transition: border-color 0.2s;
@@ -501,7 +519,7 @@
   .gap-meta {
     text-align: right;
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-secondary);
     line-height: 1.6;
   }
@@ -524,7 +542,7 @@
   .tab {
     font-family: var(--display);
     font-weight: 600;
-    font-size: 14px;
+    font-size: 15px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     padding: 16px 22px;
@@ -579,7 +597,7 @@
   }
 
   .briefing-idle p {
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-dim);
     text-align: center;
     max-width: 300px;
@@ -602,7 +620,7 @@
   .brief-heading {
     font-family: var(--display);
     font-weight: 700;
-    font-size: 14px;
+    font-size: 15px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--accent);
@@ -612,7 +630,7 @@
   }
 
   .brief-text {
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.8;
     color: var(--text-primary);
     font-weight: 300;
@@ -627,7 +645,7 @@
     width: 100%;
     border-collapse: collapse;
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     margin-top: 8px;
   }
 
@@ -635,7 +653,7 @@
     text-align: left;
     padding: 8px 12px;
     color: var(--text-dim);
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     border-bottom: 1px solid var(--border);
@@ -658,7 +676,7 @@
     content: '▋';
     animation: blink 0.8s infinite;
     color: var(--accent);
-    font-size: 15px;
+    font-size: 16px;
   }
 
   @keyframes blink {
@@ -692,7 +710,7 @@
     border: 1px solid var(--border-light);
     padding: 6px 10px;
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--accent);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -709,7 +727,7 @@
 
   .map-btn {
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: 15px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 8px 14px;
@@ -722,7 +740,7 @@
 
   .map-source-label {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-dim);
@@ -783,7 +801,7 @@
 
   .forecast-day-name {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-dim);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -802,7 +820,7 @@
   .forecast-score-pill {
     font-family: var(--display);
     font-weight: 700;
-    font-size: 14px;
+    font-size: 15px;
     padding: 2px 8px;
     display: inline-block;
     margin-bottom: 8px;
@@ -814,7 +832,7 @@
 
   .forecast-day-stats {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-secondary);
     line-height: 1.7;
     text-align: left;
@@ -827,7 +845,7 @@
     background: var(--go);
     color: var(--black);
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: bold;
     letter-spacing: 0.05em;
     padding: 2px 5px;
@@ -883,7 +901,7 @@
 
   .loading-text {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-secondary);
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -891,7 +909,7 @@
 
   .loading-step {
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: 15px;
     color: var(--accent);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -914,7 +932,7 @@
 
   .live-metric-label {
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text-dim);
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -931,7 +949,7 @@
 
   .live-metric-unit {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-secondary);
     margin-top: 2px;
   }
@@ -953,7 +971,7 @@
 
   .intel-card-label {
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: 15px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-dim);
@@ -963,7 +981,7 @@
   .intel-card-value {
     font-family: var(--display);
     font-weight: 700;
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-primary);
     margin-bottom: 4px;
     line-height: 1.2;
@@ -971,7 +989,7 @@
 
   .intel-card-detail {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-secondary);
     line-height: 1.5;
   }
@@ -983,7 +1001,7 @@
     gap: 8px;
     margin-bottom: 6px;
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: 15px;
   }
   .fuel-row-label { width: 110px; color: var(--text-secondary); flex-shrink: 0; }
   .fuel-bar-wrap  { flex: 1; height: 5px; background: var(--border); border-radius: 2px; overflow: hidden; }
@@ -1005,7 +1023,7 @@
 
   .species-label {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-dim);
@@ -1044,19 +1062,19 @@
 
   .species-btn.active .species-name { color: var(--accent); }
 
-  .species-icon { font-size: 14px; }
+  .species-icon { font-size: 15px; }
 
   .species-name {
     font-family: var(--display);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
   .species-season {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-dim);
     letter-spacing: 0.06em;
   }
@@ -1069,13 +1087,13 @@
     gap: 10px;
     margin-left: auto;
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-secondary);
   }
 
   .season-badge {
     padding: 2px 8px;
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-weight: 600;
@@ -1112,7 +1130,7 @@
 
   .report-card-source {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--accent);
@@ -1122,21 +1140,21 @@
   .report-card-title {
     font-family: var(--display);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-primary);
     line-height: 1.3;
   }
 
   .report-card-date {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-dim);
     white-space: nowrap;
     flex-shrink: 0;
   }
 
   .report-card-body {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.7;
     color: var(--text-secondary);
     font-weight: 300;
@@ -1153,7 +1171,7 @@
 
   .report-tag {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 2px 7px;
@@ -1171,7 +1189,7 @@
     align-items: center;
     gap: 5px;
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     padding: 3px 8px;
     margin-left: auto;
     flex-shrink: 0;
@@ -1193,12 +1211,12 @@
     /* Header — sticky so score stays visible while scrolling */
     header { position: sticky; top: 0; z-index: 100; background: var(--deep); }
     .app-header { padding: 10px 14px; }
-    .logo-mark { font-size: 18px; letter-spacing: 0.1em; }
+    .logo-mark { font-size: 22px; letter-spacing: 0.08em; }
     .logo-sub { display: none; }
     .header-status { gap: 8px; }
     .header-btn { display: none; }
-    .status-pill { font-size: 15px; }
-    .date-display { font-size: 14px; }
+    .status-pill { font-size: 16px; }
+    .date-display { font-size: 15px; }
 
     /* Species bar — horizontal scroll, hidden scrollbar */
     .species-bar { padding: 6px 12px; gap: 6px; border-bottom: 1px solid var(--border); }
@@ -1206,7 +1224,7 @@
     .species-options { gap: 5px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
     .species-options::-webkit-scrollbar { display: none; }
     .species-btn { padding: 7px 13px; flex-shrink: 0; min-height: 38px; }
-    .species-name { font-size: 15px; white-space: nowrap; }
+    .species-name { font-size: 16px; white-space: nowrap; }
     .species-season { display: none; }
     .species-status { display: none; }
 
@@ -1216,9 +1234,9 @@
     .verdict-score { font-size: 52px; line-height: 1; min-width: 64px; }
     .verdict-score span { font-size: 22px; }
     .verdict-call { font-size: 18px; letter-spacing: 0.06em; }
-    .verdict-sub { font-size: 15px; line-height: 1.4; margin-top: 3px; opacity: 0.85; }
+    .verdict-sub { font-size: 16px; line-height: 1.4; margin-top: 3px; opacity: 0.85; }
     .verdict-right { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-    .verdict-right .btn { width: 100%; text-align: center; padding: 12px 8px; font-size: 15px; justify-content: center; min-height: 44px; }
+    .verdict-right .btn { width: 100%; text-align: center; padding: 12px 8px; font-size: 16px; justify-content: center; min-height: 44px; }
 
     /* App layout — single column */
     .app-layout { grid-template-columns: 1fr; gap: 0; }
@@ -1226,72 +1244,72 @@
     .right-panel { padding: 0; }
 
     /* Section labels */
-    .section-label { font-size: 14px; letter-spacing: 0.1em; margin-bottom: 12px; }
+    .section-label { font-size: 15px; letter-spacing: 0.1em; margin-bottom: 12px; }
 
     /* Metrics grid — 3 columns, readable sizes */
     .live-data-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
     .live-metric { padding: 10px 10px; }
-    .live-metric-label { font-size: 14px; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .live-metric-label { font-size: 15px; letter-spacing: 0.06em; margin-bottom: 3px; }
     .live-metric-value { font-size: 22px; line-height: 1.1; }
-    .live-metric-unit { font-size: 14px; margin-top: 2px; }
+    .live-metric-unit { font-size: 15px; margin-top: 2px; }
 
     /* Fetch rows */
-    .fetch-row { font-size: 15px; padding: 5px 0; }
-    .fetch-status { font-size: 14px; }
+    .fetch-row { font-size: 16px; padding: 5px 0; }
+    .fetch-status { font-size: 15px; }
 
     /* Decision matrix */
     .pillar { padding: 12px 0; }
-    .pillar-name { font-size: 15px; letter-spacing: 0.04em; }
-    .pillar-score { font-size: 14px; }
-    .pillar-note { font-size: 15px; line-height: 1.5; margin-top: 5px; }
+    .pillar-name { font-size: 16px; letter-spacing: 0.04em; }
+    .pillar-score { font-size: 15px; }
+    .pillar-note { font-size: 16px; line-height: 1.5; margin-top: 5px; }
     .pillar-bar-track { height: 3px; margin-top: 6px; }
 
     /* Tab bar — scrollable, large tap targets */
     .tab-bar { padding: 0 14px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .tab-bar::-webkit-scrollbar { display: none; }
-    .tab { padding: 14px 16px; font-size: 15px; white-space: nowrap; flex-shrink: 0; min-height: 44px; display: flex; align-items: center; }
+    .tab { padding: 14px 16px; font-size: 16px; white-space: nowrap; flex-shrink: 0; min-height: 44px; display: flex; align-items: center; }
 
     /* Tab content */
     .tab-content { padding: 16px; }
 
     /* Tactical brief text */
-    .brief-text { font-size: 14px; line-height: 1.8; }
-    .brief-heading { font-size: 15px; letter-spacing: 0.15em; }
+    .brief-text { font-size: 15px; line-height: 1.8; }
+    .brief-heading { font-size: 16px; letter-spacing: 0.15em; }
 
     /* Forecast grid */
     .forecast-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
     .forecast-day { padding: 10px 6px; }
-    .forecast-day-name { font-size: 14px; }
+    .forecast-day-name { font-size: 15px; }
     .forecast-day-date { font-size: 20px; }
-    .forecast-day-stats { font-size: 14px; line-height: 1.5; }
-    .forecast-score-pill { font-size: 15px; }
+    .forecast-day-stats { font-size: 15px; line-height: 1.5; }
+    .forecast-score-pill { font-size: 16px; }
 
     /* Brief table */
-    .brief-table { font-size: 15px; }
+    .brief-table { font-size: 16px; }
     .brief-table th, .brief-table td { padding: 8px 10px; }
 
     /* Map tab */
     .map-controls { flex-wrap: wrap; gap: 6px; padding: 12px 14px; }
-    .map-btn { font-size: 15px; padding: 7px 10px; min-height: 36px; }
+    .map-btn { font-size: 16px; padding: 7px 10px; min-height: 36px; }
     .map-container { height: 420px; }
 
     /* Fuel budget */
-    .fuel-row-label { width: 90px; font-size: 15px; }
-    .fuel-row-val { font-size: 15px; }
+    .fuel-row-label { width: 90px; font-size: 16px; }
+    .fuel-row-val { font-size: 16px; }
 
     /* Intel cards */
     .intel-card { padding: 12px 14px; }
-    .intel-card-label { font-size: 15px; }
-    .intel-card-value { font-size: 15px; }
-    .intel-card-detail { font-size: 15px; }
+    .intel-card-label { font-size: 16px; }
+    .intel-card-value { font-size: 16px; }
+    .intel-card-detail { font-size: 16px; }
 
     /* Form inputs — 16px prevents iOS auto-zoom */
     .select-field, .input-field { font-size: 16px; min-height: 44px; }
-    .input-label { font-size: 15px; }
+    .input-label { font-size: 16px; }
 
     /* Report cards */
-    .report-card-title { font-size: 14px; }
-    .report-card-body { font-size: 15px; }
+    .report-card-title { font-size: 15px; }
+    .report-card-body { font-size: 16px; }
 
     /* General buttons */
     .btn { min-height: 44px; }
@@ -1302,18 +1320,18 @@
     .verdict-score { font-size: 44px; }
     .verdict-call { font-size: 16px; }
     .live-metric-value { font-size: 19px; }
-    .tab { padding: 13px 13px; font-size: 15px; }
+    .tab { padding: 13px 13px; font-size: 16px; }
     .species-btn { padding: 6px 10px; }
-    .species-name { font-size: 15px; }
+    .species-name { font-size: 16px; }
   }
 
   /* Landscape phone — restore two-column when rotated */
   @media (max-height: 500px) and (max-width: 900px) {
     .verdict-banner { padding: 8px 16px; flex-direction: row; align-items: center; gap: 16px; }
     .verdict-right { display: flex; gap: 8px; width: auto; }
-    .verdict-right .btn { width: auto; padding: 8px 14px; font-size: 15px; min-height: 38px; }
+    .verdict-right .btn { width: auto; padding: 8px 14px; font-size: 16px; min-height: 38px; }
     .verdict-score { font-size: 38px; }
-    .verdict-call { font-size: 15px; }
+    .verdict-call { font-size: 16px; }
     .app-layout { grid-template-columns: 300px 1fr; }
     .left-panel { border-right: 1px solid var(--border); border-bottom: none; overflow-y: auto; max-height: calc(100vh - 120px); }
   }
@@ -1325,7 +1343,7 @@
     gap: 8px;
     padding: 6px 0;
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text-secondary);
     border-bottom: 1px solid rgba(30,45,58,0.4);
   }
@@ -1339,7 +1357,7 @@
 
   .fetch-status {
     margin-left: auto;
-    font-size: 15px;
+    font-size: 16px;
     padding: 2px 6px;
     border-radius: 2px;
   }
@@ -1361,28 +1379,40 @@
 
 <!-- Header -->
 <header>
-  <div class="logo">
-    <div class="logo-mark">STRIKE WINDOW</div>
-    <div class="logo-sub">Offshore Conditions // Sydney</div>
-  </div>
-  <div class="header-status">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-mark">STRIKE WINDOW</div>
+      <div class="logo-sub">Offshore Conditions // Sydney</div>
+      <div class="logo-tagline">Made by fishermen, for fishermen</div>
+    </div>
+    <div class="header-status">
     <div class="status-pill">
       <div class="status-dot" id="liveStatusDot"></div>
       <span id="liveStatusText">No data</span>
     </div>
     <div class="date-display" id="dateDisplay">--</div>
-    <div class="tide-meter" id="tideMeter" title="Sydney tide height — Open-Meteo">
-      <div class="tide-bar-wrap">
-        <div class="tide-bar-track">
-          <div class="tide-bar-fill" id="tideBarFill" style="height:50%;"></div>
+    <div style="display:flex;align-items:center;gap:20px;">
+      <!-- Moon phase + solunar -->
+      <div style="text-align:right;">
+        <div style="font-family:var(--mono);font-size: 15px;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">Bite Windows</div>
+        <div id="moonPhase" style="font-family:var(--mono);font-size:16px;color:var(--text-secondary);margin-bottom:3px;">—</div>
+        <div id="solunarWindows" style="font-family:var(--mono);font-size: 15px;line-height:1.8;">—</div>
+      </div>
+      <!-- Tide meter -->
+      <div class="tide-meter" id="tideMeter" title="Sydney tide height — Open-Meteo">
+        <div class="tide-bar-wrap">
+          <div class="tide-bar-track">
+            <div class="tide-bar-fill" id="tideBarFill" style="height:50%;"></div>
+          </div>
+        </div>
+        <div class="tide-info">
+          <div class="tide-label">Tide</div>
+          <div class="tide-value" id="tideValue">—</div>
+          <div class="tide-direction" id="tideDirection">—</div>
         </div>
       </div>
-      <div class="tide-info">
-        <div class="tide-label">Tide</div>
-        <div class="tide-value" id="tideValue">—</div>
-        <div class="tide-direction" id="tideDirection">—</div>
-      </div>
     </div>
+  </div>
   </div>
 </header>
 
@@ -1546,7 +1576,7 @@
     <div class="panel-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div class="section-label" style="margin-bottom:0;">Live field intel</div>
-        <button class="btn" style="padding:5px 10px;font-size:11px;" id="intelFetchBtn" onclick="fetchFieldIntel()">⬇ Fetch Intel</button>
+        <button class="btn" style="padding:5px 10px;font-size: 14px;" id="intelFetchBtn" onclick="fetchFieldIntel()">⬇ Fetch Intel</button>
       </div>
 
       <div class="intel-card" id="intel-bait">
@@ -1573,7 +1603,7 @@
         <div class="intel-card-detail" id="id-hotspot">Not yet fetched</div>
       </div>
 
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:10px;line-height:1.6;">
+      <div style="font-family:var(--mono);font-size: 13px;color:var(--text-dim);margin-top:10px;line-height:1.6;">
         Sources: Google AI Overview · Fishing Station Mona Vale · Fishare.app · YouTube fishing reports · Facebook fishing groups
       </div>
     </div>
@@ -1586,12 +1616,20 @@
       <div style="margin-bottom:12px;">
         <div class="intel-card-label" style="margin-bottom:6px;">Vessel</div>
         <select class="select-field" id="boatSelect" onchange="updateFuelBudget()">
-          <option value="gw216">Grady-White Fisherman 216 (Your boat)</option>
-          <option value="sf268">Sea Fox 268 Commander</option>
+          <optgroup label="Australian">
           <option value="hh625">Haines Hunter 625 Offshore</option>
           <option value="bc730">Bar Crusher 730HT</option>
           <option value="stabi2250">Stabicraft 2250 Supercab</option>
+          <option value="sea400">Seastrike 400 Centre Console</option>
+          <option value="ckr550">Caribbean 550 Offshore</option>
+          </optgroup>
+          <optgroup label="International">
+          <option value="gw216">Grady-White Fisherman 216 (Your boat)</option>
+          <option value="sf268">Sea Fox 268 Commander</option>
+          </optgroup>
+          <optgroup label="Other">
           <option value="custom">Custom / Enter manually</option>
+          </optgroup>
         </select>
       </div>
 
@@ -1621,13 +1659,13 @@
       <div style="margin-bottom:12px;">
         <div class="intel-card-label" style="margin-bottom:4px;">Gap to warm water (nm)</div>
         <input type="number" class="input-field" id="gapDistance" value="20" min="1" max="80" oninput="updateFuelBudget()">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:4px;">Auto-set from field intel. Adjust if needed.</div>
+        <div style="font-family:var(--mono);font-size: 13px;color:var(--text-dim);margin-top:4px;">Auto-set from field intel. Adjust if needed.</div>
       </div>
 
       <!-- Troll time -->
       <div style="margin-bottom:14px;">
-        <div class="intel-card-label" style="margin-bottom:4px;">Time on the grounds (hrs)</div>
-        <input type="number" class="input-field" id="trollHours" value="4" min="1" max="12" step="0.5" oninput="updateFuelBudget()">
+        <div class="intel-card-label" style="margin-bottom:4px;">Hours trolling (est. 6hrs)</div>
+        <input type="number" class="input-field" id="trollHours" value="6" min="1" max="12" step="0.5" oninput="updateFuelBudget()">
       </div>
 
       <!-- Fuel budget breakdown -->
@@ -1635,7 +1673,7 @@
         <div style="background:var(--surface);border:1px solid var(--border);padding:12px 14px;margin-bottom:2px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
             <div class="intel-card-label">Fuel breakdown</div>
-            <div id="fuelVesselTag" style="font-family:var(--mono);font-size:9px;color:var(--accent);"></div>
+            <div id="fuelVesselTag" style="font-family:var(--mono);font-size: 13px;color:var(--accent);"></div>
           </div>
 
           <div class="fuel-row">
@@ -1660,25 +1698,25 @@
           </div>
 
           <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
-            <div style="font-family:var(--mono);font-size:10px;color:var(--text-secondary);">Total required</div>
+            <div style="font-family:var(--mono);font-size: 14px;color:var(--text-secondary);">Total required</div>
             <div style="font-family:var(--display);font-weight:700;font-size:24px;" id="fuelTotal">—</div>
           </div>
 
           <!-- Tank gauge -->
           <div style="margin-top:10px;">
-            <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-bottom:4px;">
+            <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size: 13px;color:var(--text-dim);margin-bottom:4px;">
               <span>0L</span>
               <span id="fuelTankLabel">Tank: 303L</span>
             </div>
             <div style="height:10px;background:var(--border);border-radius:2px;overflow:hidden;">
               <div id="tankGauge" style="height:100%;border-radius:2px;transition:width 0.4s,background 0.4s;width:0%;background:var(--go);"></div>
             </div>
-            <div style="font-family:var(--mono);font-size:10px;margin-top:6px;text-align:center;" id="fuelVerdict">—</div>
+            <div style="font-family:var(--mono);font-size: 14px;margin-top:6px;text-align:center;" id="fuelVerdict">—</div>
           </div>
         </div>
 
         <!-- Turn-home rule -->
-        <div style="background:rgba(255,171,0,0.05);border:1px solid rgba(255,171,0,0.2);padding:10px 12px;font-family:var(--mono);font-size:10px;line-height:1.7;color:var(--text-secondary);">
+        <div style="background:rgba(255,171,0,0.05);border:1px solid rgba(255,171,0,0.2);padding:10px 12px;font-family:var(--mono);font-size: 14px;line-height:1.7;color:var(--text-secondary);">
           <strong style="color:var(--warn);">◈ Turn-home rule:</strong> <span id="turnHomeRule">—</span>
         </div>
       </div>
@@ -1692,7 +1730,7 @@
       <button class="tab active" onclick="switchTab('briefing', this)">Tactical Brief</button>
       <button class="tab" onclick="switchTab('map', this)">SST Map</button>
       <button class="tab" onclick="switchTab('forecast', this)">7-Day Window</button>
-      <button class="tab" onclick="switchTab('reports', this)" id="reportsTab">Catch Reports <span id="reportsBadge" style="display:none;background:var(--go);color:var(--black);font-size:9px;padding:1px 5px;border-radius:2px;margin-left:4px;font-family:var(--mono);">NEW</span></button>
+      <button class="tab" onclick="switchTab('reports', this)" id="reportsTab">Catch Reports <span id="reportsBadge" style="display:none;background:var(--go);color:var(--black);font-size: 13px;padding:1px 5px;border-radius:2px;margin-left:4px;font-family:var(--mono);">NEW</span></button>
     </div>
 
     <!-- Briefing Tab -->
@@ -1734,8 +1772,7 @@
     <div class="tab-content" id="tab-map">
       <div class="map-controls">
         <span class="map-source-label">Windy</span>
-        <button class="map-btn active" onclick="setMapLayer('sst', this)">SST + Currents</button>
-        <button class="map-btn" onclick="setMapLayer('currents', this)">Currents Only</button>
+        <button class="map-btn active" onclick="setMapLayer('currents', this)">SST &amp; Currents</button>
         <button class="map-btn" onclick="setMapLayer('wind', this)">Wind</button>
         <button class="map-btn" onclick="setMapLayer('waves', this)">Swell</button>
         <span class="map-source-label" style="margin-left:8px;">BOM</span>
@@ -1815,11 +1852,11 @@
 
                         <!-- Toggle marks button -->
         <button id="mapMarksToggle" onclick="toggleMapMarks()"
-          style="position:absolute;bottom:36px;right:8px;z-index:25;background:rgba(8,12,15,0.85);border:1px solid var(--border-light);color:var(--accent);font-family:var(--mono);font-size:10px;letter-spacing:0.08em;padding:5px 10px;cursor:pointer;text-transform:uppercase;">
+          style="position:absolute;bottom:36px;right:8px;z-index:25;background:rgba(8,12,15,0.85);border:1px solid var(--border-light);color:var(--accent);font-family:var(--mono);font-size: 14px;letter-spacing:0.08em;padding:5px 10px;cursor:pointer;text-transform:uppercase;">
           ◈ MARKS ON
         </button>
       </div>
-      <p style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center;margin-top:8px;">
+      <p style="font-family:var(--mono);font-size: 15px;color:var(--text-dim);text-align:center;margin-top:8px;">
         Interactive — pinch/scroll to zoom · tap to read SST values · marks show default zoom only
       </p>
     </div>
@@ -1831,7 +1868,7 @@
         <!-- Populated by JS -->
       </div>
       <div class="forecast-detail" id="forecastDetail">
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center;padding:20px 0;">
+        <div style="font-family:var(--mono);font-size: 15px;color:var(--text-dim);text-align:center;padding:20px 0;">
           Fetch live data to generate forecast window analysis
         </div>
       </div>
@@ -1847,31 +1884,31 @@
       <!-- Intel Summary Card -->
       <div id="reportsSummaryCard" style="display:none;background:var(--surface);border:1px solid var(--border);padding:18px 20px;margin-bottom:20px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);">◈ AI Intel Summary</div>
-          <div id="reportsTimestamp" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-left:auto;"></div>
+          <div style="font-family:var(--display);font-weight:700;font-size: 15px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);">◈ AI Intel Summary</div>
+          <div id="reportsTimestamp" style="font-family:var(--mono);font-size: 14px;color:var(--text-dim);margin-left:auto;"></div>
         </div>
-        <div id="reportsSummaryText" style="font-size:14px;line-height:1.8;color:var(--text-primary);font-weight:300;"></div>
+        <div id="reportsSummaryText" style="font-size: 15px;line-height:1.8;color:var(--text-primary);font-weight:300;"></div>
       </div>
 
       <!-- Season Context -->
       <div style="background:rgba(0,180,216,0.04);border:1px solid rgba(0,180,216,0.2);padding:14px 18px;margin-bottom:20px;">
-        <div id="seasonContextLabel" style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">◈ Season Context</div>
-        <div id="seasonContextText" style="font-size:13px;line-height:1.7;color:var(--text-secondary);">
+        <div id="seasonContextLabel" style="font-family:var(--mono);font-size: 14px;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">◈ Season Context</div>
+        <div id="seasonContextText" style="font-size: 15px;line-height:1.7;color:var(--text-secondary);">
           Select a species and fetch data to see season context.
         </div>
       </div>
 
       <!-- Reports Feed -->
       <div id="reportsFeed">
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:center;padding:40px 0;">
+        <div style="font-family:var(--mono);font-size: 15px;color:var(--text-dim);text-align:center;padding:40px 0;">
           Hit "Search Reports" to pull the latest catch intel from Sydney fishing sources.
         </div>
       </div>
 
       <!-- Sources Footer -->
       <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Sources searched</div>
-        <div id="reportsSources" style="font-family:var(--mono);font-size:11px;color:var(--text-secondary);line-height:2;">
+        <div style="font-family:var(--mono);font-size: 14px;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;">Sources searched</div>
+        <div id="reportsSources" style="font-family:var(--mono);font-size: 14px;color:var(--text-secondary);line-height:2;">
           Fishare.app · Google News · Fishing World Australia · Fishing Monthly · YouTube · Facebook fishing groups · Local tackle shop reports
         </div>
       </div>
@@ -1904,11 +1941,87 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchTideData();
   setInterval(fetchTideData, 30 * 60 * 1000); // refresh every 30 min
   updateSeasonContext('yft'); // default species
+  updateSolunar();
+  setInterval(updateSolunar, 60000);
 });
 
 // ═══════════════════════════════════════
 // TIDAL METER
 // ═══════════════════════════════════════
+
+// ── SOLUNAR / MOON PHASE ──
+// Calculated locally — no API needed
+function getMoonPhase(date) {
+  const known = new Date('2000-01-06'); // known new moon
+  const diff = (date - known) / (29.530588853 * 24 * 3600 * 1000);
+  const phase = ((diff % 1) + 1) % 1;
+  if (phase < 0.0625 || phase >= 0.9375) return { name: 'New Moon', icon: '🌑', val: phase };
+  if (phase < 0.1875) return { name: 'Waxing Crescent', icon: '🌒', val: phase };
+  if (phase < 0.3125) return { name: 'First Quarter', icon: '🌓', val: phase };
+  if (phase < 0.4375) return { name: 'Waxing Gibbous', icon: '🌔', val: phase };
+  if (phase < 0.5625) return { name: 'Full Moon', icon: '🌕', val: phase };
+  if (phase < 0.6875) return { name: 'Waning Gibbous', icon: '🌖', val: phase };
+  if (phase < 0.8125) return { name: 'Last Quarter', icon: '🌗', val: phase };
+  return { name: 'Waning Crescent', icon: '🌘', val: phase };
+}
+
+function getSolunarWindows(date) {
+  // Solunar theory: major periods when moon is overhead/underfoot, minor at moonrise/moonset
+  // Approximate using moon hour angle — good to ~±30min for fishing purposes
+  const jd = (date / 86400000) + 2440587.5;
+  const T = (jd - 2451545.0) / 36525;
+  const moonLon = (218.316 + 13.176396 * (jd - 2451545.0)) % 360;
+  const lst = ((date.getUTCHours() + date.getUTCMinutes()/60 + 151.21/15) * 15) % 360; // Sydney ~151.21E
+  const ha = ((lst - moonLon) % 360 + 360) % 360;
+
+  // Major windows: moon overhead (ha≈0) and underfoot (ha≈180) — 2hr windows
+  // Minor windows: moonrise (ha≈90) and moonset (ha≈270) — 1hr windows
+  const now = date.getHours() * 60 + date.getMinutes();
+  const majorOffset1 = Math.round(((360 - ha) / 360) * 1440) % 1440;
+  const majorOffset2 = (majorOffset1 + 720) % 1440;
+  const minorOffset1 = (majorOffset1 + 360) % 1440;
+  const minorOffset2 = (majorOffset1 + 1080) % 1440;
+
+  const toTime = m => { const h = Math.floor(m/60) % 24; const min = m % 60; return `${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`; };
+  const isActive = (offset, dur) => { const diff = (offset - now + 1440) % 1440; return diff < dur || diff > 1440 - 30; };
+
+  return [
+    { type: 'Major', start: toTime(majorOffset1), duration: '2hr', active: isActive(majorOffset1, 120) },
+    { type: 'Major', start: toTime(majorOffset2), duration: '2hr', active: isActive(majorOffset2, 120) },
+    { type: 'Minor', start: toTime(minorOffset1), duration: '1hr', active: isActive(minorOffset1, 60) },
+    { type: 'Minor', start: toTime(minorOffset2), duration: '1hr', active: isActive(minorOffset2, 60) },
+  ].sort((a, b) => a.start.localeCompare(b.start));
+}
+
+function updateSolunar() {
+  const now = new Date();
+  const moon = getMoonPhase(now);
+  const windows = getSolunarWindows(now);
+  const moonEl = document.getElementById('moonPhase');
+  const solunarEl = document.getElementById('solunarWindows');
+  if (!moonEl || !solunarEl) return;
+
+  moonEl.innerHTML = `${moon.icon} ${moon.name}`;
+
+  const activeWindow = windows.find(w => w.active);
+  // Render as a 2-column grid — Major left, Minor right, always aligned
+  const majors = windows.filter(w => w.type === 'Major');
+  const minors = windows.filter(w => w.type === 'Minor');
+  const rows = [0, 1].map(i => {
+    const m = majors[i] || {};
+    const n = minors[i] || {};
+    const mColor = m.active ? 'var(--go)' : 'var(--text-dim)';
+    const nColor = n.active ? 'var(--go)' : 'var(--text-dim)';
+    const mWeight = m.active ? '700' : '400';
+    const nWeight = n.active ? '700' : '400';
+    return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:2px;">
+      <span style="color:${mColor};font-weight:${mWeight}">${m.active ? '● ' : ''}Major ${m.start || ''}</span>
+      <span style="color:${nColor};font-weight:${nWeight}">${n.active ? '● ' : ''}Minor ${n.start || ''}</span>
+    </div>`;
+  });
+  solunarEl.innerHTML = rows.join('');
+}
+
 async function fetchTideData() {
   try {
     // Sydney Heads coords — 2 day hourly forecast
@@ -2334,15 +2447,17 @@ function setSpecies(speciesKey, btn) {
   intel.gap = sp.defaultGap;
   updateFuelBudget();
 
-  // Re-score if we have data
+  // Re-score if we have data, otherwise auto-fetch
   if (state.fetched) {
     scoreMatrix();
     updateVerdict();
     buildForecastGrid();
+    updateSeasonContext(speciesKey);
+  } else {
+    // Auto-fetch on species select — one tap does everything
+    updateSeasonContext(speciesKey);
+    fetchLiveData();
   }
-
-  // Update catch reports season context
-  updateSeasonContext(speciesKey);
 }
 
 // ═══════════════════════════════════════
@@ -2686,7 +2801,7 @@ async function fetchFieldIntel() {
     } else {
       const note = document.createElement('div');
       note.id = 'intel-source-note';
-      note.style.cssText = 'font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);';
+      note.style.cssText = 'font-family:var(--mono);font-size: 15px;color:var(--text-dim);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);';
       note.innerHTML = srcNote;
       document.getElementById('intel-bait')?.parentElement?.appendChild(note);
     }
@@ -2731,11 +2846,13 @@ function updateGap() {}
 // BOAT DATABASE & FUEL CALCULATOR
 // ═══════════════════════════════════════
 const BOATS = {
-  gw216:     { name: 'Grady-White 216',        tank: 303, cruiseBurn: 27.6, cruiseSpeed: 23.7, trollBurn: 10 },
-  sf268:     { name: 'Sea Fox 268 Commander',   tank: 526, cruiseBurn: 38.6, cruiseSpeed: 24.0, trollBurn: 16 },
   hh625:     { name: 'Haines Hunter 625',       tank: 200, cruiseBurn: 35,   cruiseSpeed: 22,   trollBurn: 8  },
   bc730:     { name: 'Bar Crusher 730HT',       tank: 240, cruiseBurn: 55,   cruiseSpeed: 26,   trollBurn: 12 },
   stabi2250: { name: 'Stabicraft 2250',         tank: 200, cruiseBurn: 40,   cruiseSpeed: 24,   trollBurn: 10 },
+  sea400:    { name: 'Seastrike 400',           tank: 280, cruiseBurn: 45,   cruiseSpeed: 24,   trollBurn: 10 },
+  ckr550:    { name: 'Caribbean 550 Offshore',  tank: 350, cruiseBurn: 60,   cruiseSpeed: 25,   trollBurn: 14 },
+  gw216:     { name: 'Grady-White 216',         tank: 303, cruiseBurn: 27.6, cruiseSpeed: 23.7, trollBurn: 10 },
+  sf268:     { name: 'Sea Fox 268 Commander',   tank: 526, cruiseBurn: 38.6, cruiseSpeed: 24.0, trollBurn: 16 },
   custom:    { name: 'Custom',                  tank: 300, cruiseBurn: 30,   cruiseSpeed: 22,   trollBurn: 8  }
 };
 
@@ -2890,7 +3007,7 @@ function showForecastDetail(day, score) {
       <tr><td>Access Score</td><td>${day.accessScore}/3</td></tr>
       <tr><td>Assessment</td><td style="color:${color}">${verdict}</td></tr>
     </table>
-    <p style="margin-top:14px;font-size:12px;color:var(--text-secondary);font-family:var(--mono);line-height:1.6;">
+    <p style="margin-top:14px;font-size: 15px;color:var(--text-secondary);font-family:var(--mono);line-height:1.6;">
       Note: SST, SSH and EAC scores are held constant from today's fetch. Access score varies by forecast wind/swell.
     </p>
   `;
@@ -3073,12 +3190,8 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
 // ═══════════════════════════════════════
 
 const mapLayers = {
-  sst: {
-    label: 'SST + Currents — Windy (live satellite + ECMWF current overlay)',
-    src: 'https://embed.windy.com/embed2.html?lat=-33.95&lon=151.55&detailLat=-33.95&detailLon=151.55&zoom=8&level=surface&overlay=sst&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1'
-  },
   currents: {
-    label: 'Ocean Currents — Windy (ECMWF surface current vectors)',
+    label: 'SST & Currents — Windy (live sea surface temp + current vectors)',
     src: 'https://embed.windy.com/embed2.html?lat=-33.95&lon=151.55&detailLat=-33.95&detailLon=151.55&zoom=8&level=surface&overlay=currents&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1'
   },
   wind: {
@@ -3260,7 +3373,7 @@ function renderReports(reports) {
       <div class="report-card-body">${r.body}</div>
       <div class="report-card-tags">
         ${r.tags.map(t => `<span class="report-tag ${t}">${t.toUpperCase()}</span>`).join('')}
-        ${r.url ? `<a href="${r.url}" target="_blank" style="font-family:var(--mono);font-size:9px;color:var(--accent);margin-left:auto;text-decoration:none;letter-spacing:0.06em;">↗ SOURCE</a>` : ''}
+        ${r.url ? `<a href="${r.url}" target="_blank" style="font-family:var(--mono);font-size: 13px;color:var(--accent);margin-left:auto;text-decoration:none;letter-spacing:0.06em;">↗ SOURCE</a>` : ''}
       </div>
     </div>
   `).join('');
