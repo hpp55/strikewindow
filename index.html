@@ -1954,8 +1954,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateSeasonContext('yft'); // default species
   updateSolunar();
   setInterval(updateSolunar, 60000);
-  // Auto-fetch on load — no buttons needed
-  fetchLiveData();
+  // Auto-fetch on load — small delay to ensure DOM is fully ready
+  setTimeout(() => fetchLiveData(), 500);
 });
 
 // ═══════════════════════════════════════
@@ -2211,7 +2211,6 @@ async function fetchLiveData() {
     document.getElementById('liveStatusText').textContent = 'Live — ' + new Date().toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
 
     state.fetched = true;
-    document.getElementById('analyseBtn').disabled = false;
     // Auto-run analysis — no button press needed
     runAnalysis();
 
