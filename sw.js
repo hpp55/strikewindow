@@ -1,8 +1,8 @@
 // Strike Window — Service Worker
 // Strategy: cache-first for app shell, network-first for live data APIs
 
-const CACHE_NAME = 'strike-window-v1';
-const CACHE_STATIC_NAME = 'strike-window-static-v1';
+const CACHE_NAME = 'strike-window-v2';
+const CACHE_STATIC_NAME = 'strike-window-static-v2';
 
 // App shell — files that make the UI work offline
 const SHELL_URLS = [
