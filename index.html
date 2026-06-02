@@ -368,6 +368,10 @@
     flex-direction: column;
   }
 
+  /* Mobile reflow — tabs move to position 2 using CSS order on panel sections */
+  .panel-section { order: 0; }
+  #dataStatusSection { order: 99; } /* Where we're pulling from always last */
+
   .panel-section {
     border-bottom: 1px solid var(--border);
     padding: 20px;
@@ -1239,7 +1243,7 @@
   /* ── MOBILE RESPONSIVE ── */
   @media (max-width: 900px) {
     .app-layout { grid-template-columns: 1fr; }
-    .left-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none; overflow: visible; }
+    .left-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none !important; height: auto !important; overflow: visible !important; overflow-y: visible !important; }
     .forecast-grid { grid-template-columns: repeat(4, 1fr); }
   }
 
@@ -1274,10 +1278,36 @@
     .verdict-right { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
     .verdict-right .btn { width: 100%; text-align: center; padding: 12px 8px; font-size: 16px; justify-content: center; min-height: 44px; }
 
-    /* App layout — single column */
-    .app-layout { grid-template-columns: 1fr; gap: 0; }
-    .left-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none; overflow: visible; padding: 16px; }
-    .right-panel { padding: 0; }
+    /* App layout — flex column on mobile so we can reorder sections */
+    .app-layout { display: flex; flex-direction: column; gap: 0; }
+    .left-panel {
+      border-right: none;
+      border-bottom: none;
+      max-height: none !important;
+      height: auto !important;
+      overflow: visible !important;
+      overflow-y: visible !important;
+      padding: 0;
+      order: 0;
+      display: contents; /* dissolve left-panel so sections flow into main flex */
+    }
+    .right-panel { padding: 0; order: 0; }
+
+    /* Assign order to each section for mobile flow:
+       1. Current conditions
+       2. Right panel (tabs)
+       3. Decision matrix
+       4. Live field intel
+       5. Fuel budget
+       6. Brief content (inside right panel — handled by right-panel order)
+       7. Where we're pulling from (footer)
+    */
+    #conditionsSection  { order: 1; } /* 1. Current conditions */
+    .right-panel        { order: 2; } /* 2. Tabs + brief */
+    #matrixSection      { order: 3; } /* 3. Decision matrix */
+    #intelSection       { order: 4; } /* 4. Live field intel */
+    #fuelSection        { order: 5; } /* 5. Fuel budget */
+    #dataStatusSection  { order: 6; } /* 6. Where we're pulling from — footer */
 
     /* Section labels */
     .section-label { font-size: 15px; letter-spacing: 0.1em; margin-bottom: 12px; }
@@ -1524,7 +1554,7 @@
   <div class="left-panel">
 
     <!-- Live metrics -->
-    <div class="panel-section">
+    <div class="panel-section" id="conditionsSection">
       <div class="section-label">Current conditions</div>
       <div class="live-data-grid">
         <div class="live-metric">
@@ -1561,7 +1591,7 @@
     </div>
 
     <!-- Pillar Scores -->
-    <div class="panel-section">
+    <div class="panel-section" id="matrixSection">
       <div class="section-label">Decision matrix</div>
       <div class="pillar" id="p-access">
         <div class="pillar-header">
@@ -1598,7 +1628,7 @@
     </div>
 
     <!-- Automated Intel Panel -->
-    <div class="panel-section">
+    <div class="panel-section" id="intelSection">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div class="section-label" style="margin-bottom:0;">Live field intel</div>
         <button class="btn" style="padding:5px 10px;font-size: 14px;" id="intelFetchBtn" onclick="fetchFieldIntel()">⬇ Fetch Intel</button>
@@ -1634,7 +1664,7 @@
     </div>
 
     <!-- Fuel Budget -->
-    <div class="panel-section">
+    <div class="panel-section" id="fuelSection">
       <div class="section-label">Fuel budget</div>
 
       <!-- Boat selector -->
