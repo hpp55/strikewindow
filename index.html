@@ -8,9 +8,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Strike Window">
 <meta name="description" content="Tactical offshore fishing decision app for Sydney anglers. Live Go/No-Go verdict before you burn the fuel.">
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icons/icon-180.png">
-<meta name="mobile-web-app-capable" content="yes">
 <title>Strike Window — Tactical Offshore Fishing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
@@ -997,7 +994,36 @@
     line-height: 1.5;
   }
 
+  /* ── 7-DAY BANNER ── */
+  #forecastBanner::-webkit-scrollbar { display: none; }
+  .banner-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    flex-shrink: 0;
+    min-width: 52px;
+    transition: border-color 0.2s;
+  }
+  .banner-day:hover { border-color: var(--accent); }
+  .banner-day.banner-go   { border-color: rgba(0,230,118,0.4); background: rgba(0,230,118,0.06); }
+  .banner-day.banner-warn { border-color: rgba(255,171,0,0.4);  background: rgba(255,171,0,0.06); }
+  .banner-day.banner-nogo { border-color: rgba(255,23,68,0.2);  background: rgba(255,23,68,0.03); }
+  .banner-day.banner-best { border-color: var(--go); background: rgba(0,230,118,0.1); }
+  .banner-day-name  { font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .banner-day-date  { font-family: var(--display); font-size: 18px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+  .banner-day-score { font-family: var(--mono); font-size: 12px; font-weight: 700; }
+  .banner-day-score.go   { color: var(--go); }
+  .banner-day-score.warn { color: var(--warn); }
+  .banner-day-score.nogo { color: var(--nogo); }
+  .banner-best-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--go); }
+
   /* ── FUEL BUDGET ── */
+
   .fuel-row {
     display: flex;
     align-items: center;
@@ -1202,276 +1228,153 @@
   .report-signal.moderate { color: var(--warn); background: rgba(255,171,0,0.08); border: 1px solid rgba(255,171,0,0.2); }
   .report-signal.slow { color: var(--text-dim); background: transparent; border: 1px solid var(--border); }
 
-  /* ── RESPONSIVE ── */
-
-  /* Tablet — collapse to single column */
+  /* Responsive */
+  /* ── MOBILE RESPONSIVE ── */
   @media (max-width: 900px) {
     .app-layout { grid-template-columns: 1fr; }
     .left-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none; overflow: visible; }
     .forecast-grid { grid-template-columns: repeat(4, 1fr); }
   }
 
-  /* ── MOBILE ── max-width: 600px ── */
   @media (max-width: 600px) {
-
-    /* ── HEADER: compact strip — logo + tide + status only ── */
+    /* Header — sticky so score stays visible while scrolling */
     header { position: sticky; top: 0; z-index: 100; background: var(--deep); }
-
-    .header-top {
-      padding: 10px 14px 8px;
-      align-items: center;         /* vertically centre logo and right cluster */
-    }
-
-    /* Logo: shrink to single line */
-    .logo { gap: 1px; }
-    .logo-mark { font-size: 24px; letter-spacing: 0.08em; }
+    .app-header { padding: 10px 14px; }
+    .logo-mark { font-size: 22px; letter-spacing: 0.08em; }
     .logo-sub { display: none; }
-    .logo-tagline { display: none; }
+    .header-status { gap: 8px; }
+    .header-btn { display: none; }
+    .status-pill { font-size: 16px; }
+    .date-display { font-size: 15px; }
 
-    /* Header right: hide date + bite windows, keep live status + tide */
-    .header-status { gap: 10px; align-items: center; }
-    .date-display { display: none; }
-
-    /* Hide bite-windows block (moon/solunar) — keep only status dot + tide */
-    .header-bite-windows { display: none !important; }
-    /* Tighten the meta wrapper gap */
-    .header-meta { gap: 10px !important; }
-
-    /* Keep tide meter but tighten it */
-    .tide-meter {
-      display: flex !important;   /* override the hide rule at 600px */
-      padding-left: 10px;
-      border-left: 1px solid var(--border);
-      gap: 6px;
-    }
-    .tide-bar-track { height: 22px; }
-    .tide-label { font-size: 11px; }
-    .tide-value { font-size: 15px; }
-    .tide-direction { font-size: 12px; }
-
-    .status-pill { font-size: 14px; }
-    .status-dot { width: 7px; height: 7px; }
-
-    /* ── SPECIES BAR: 2-column full-width grid ── */
-    .species-bar {
-      padding: 10px 12px;
-      gap: 8px;
-      flex-direction: column;
-      align-items: stretch;
-    }
+    /* Species bar — horizontal scroll, hidden scrollbar */
+    .species-bar { padding: 6px 12px; gap: 6px; border-bottom: 1px solid var(--border); }
     .species-label { display: none; }
+    .species-options { gap: 5px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
+    .species-options::-webkit-scrollbar { display: none; }
+    .species-btn { padding: 7px 13px; flex-shrink: 0; min-height: 38px; }
+    .species-name { font-size: 16px; white-space: nowrap; }
+    .species-season { display: none; }
     .species-status { display: none; }
 
-    .species-options {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      flex-wrap: unset;
-      overflow: visible;
-      padding-bottom: 0;
-    }
-
-    .species-btn {
-      width: 100%;
-      padding: 12px 14px;
-      min-height: 52px;
-      flex-shrink: unset;
-      justify-content: flex-start;
-      gap: 8px;
-    }
-
-    .species-icon { font-size: 16px; }
-
-    .species-name {
-      font-size: 15px;
-      white-space: nowrap;
-      font-weight: 700;
-    }
-
-    /* Show season in a muted smaller line */
-    .species-season {
-      display: block;
-      font-size: 11px;
-      opacity: 0.65;
-      letter-spacing: 0.04em;
-    }
-
-    /* Stack icon + text vertically inside each button */
-    .species-btn {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 2px;
-    }
-    .species-icon { font-size: 18px; margin-bottom: 2px; }
-
-    /* ── VERDICT BANNER ── */
-    .verdict-banner {
-      padding: 14px 14px;
-      flex-direction: column;
-      gap: 12px;
-      align-items: stretch;
-    }
-    .verdict-left { gap: 14px; align-items: center; }
-    .verdict-score { font-size: 56px; line-height: 1; min-width: 70px; }
-    .verdict-score span { font-size: 24px; }
-    .verdict-call { font-size: 22px; letter-spacing: 0.06em; }
-    .verdict-sub { font-size: 14px; line-height: 1.45; margin-top: 3px; opacity: 0.85; }
+    /* Verdict banner — score+text top row, buttons below in 50/50 grid */
+    .verdict-banner { padding: 14px 16px; flex-direction: column; gap: 12px; align-items: stretch; }
+    .verdict-left { gap: 16px; align-items: center; }
+    .verdict-score { font-size: 52px; line-height: 1; min-width: 64px; }
+    .verdict-score span { font-size: 22px; }
+    .verdict-call { font-size: 18px; letter-spacing: 0.06em; }
+    .verdict-sub { font-size: 16px; line-height: 1.4; margin-top: 3px; opacity: 0.85; }
     .verdict-right { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-    .verdict-right .btn {
-      width: 100%;
-      text-align: center;
-      padding: 13px 8px;
-      font-size: 15px;
-      justify-content: center;
-      min-height: 48px;
-    }
+    .verdict-right .btn { width: 100%; text-align: center; padding: 12px 8px; font-size: 16px; justify-content: center; min-height: 44px; }
 
-    /* ── APP LAYOUT: single column, left-panel as card block ── */
+    /* App layout — single column */
     .app-layout { grid-template-columns: 1fr; gap: 0; }
-
-    .left-panel {
-      border-right: none;
-      border-bottom: 3px solid var(--border);
-      max-height: none;
-      overflow: visible;
-      padding: 0;                /* panel-section padding handles inner spacing */
-    }
-
-    .panel-section { padding: 16px 14px; }
-
+    .left-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none; overflow: visible; padding: 16px; }
     .right-panel { padding: 0; }
 
-    /* ── SECTION LABELS ── */
-    .section-label { font-size: 13px; letter-spacing: 0.12em; margin-bottom: 12px; }
+    /* Section labels */
+    .section-label { font-size: 15px; letter-spacing: 0.1em; margin-bottom: 12px; }
 
-    /* ── CONDITIONS TILES: 2-col grid, arm's-length readable ── */
-    .live-data-grid {
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 8px;
-    }
-    .live-metric { padding: 14px 12px; }
-    .live-metric-label { font-size: 11px; letter-spacing: 0.1em; margin-bottom: 5px; }
-    .live-metric-value { font-size: 32px; line-height: 1; }
-    .live-metric-unit { font-size: 12px; margin-top: 3px; }
+    /* Metrics grid — 3 columns, readable sizes */
+    .live-data-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 8px; }
+    .live-metric { padding: 10px 10px; }
+    .live-metric-label { font-size: 15px; letter-spacing: 0.06em; margin-bottom: 3px; }
+    .live-metric-value { font-size: 22px; line-height: 1.1; }
+    .live-metric-unit { font-size: 15px; margin-top: 2px; }
 
-    /* ── DATA FETCH STATUS ROWS ── */
-    .fetch-row { font-size: 13px; padding: 6px 0; }
-    .fetch-status { font-size: 12px; }
+    /* Fetch rows */
+    .fetch-row { font-size: 16px; padding: 5px 0; }
+    .fetch-status { font-size: 15px; }
 
-    /* ── DECISION MATRIX PILLARS ── */
+    /* Decision matrix */
     .pillar { padding: 12px 0; }
-    .pillar-name { font-size: 15px; letter-spacing: 0.03em; }
-    .pillar-score { font-size: 14px; }
-    .pillar-note { font-size: 13px; line-height: 1.55; margin-top: 6px; }
-    .pillar-bar-track { height: 4px; margin-top: 8px; }
+    .pillar-name { font-size: 16px; letter-spacing: 0.04em; }
+    .pillar-score { font-size: 15px; }
+    .pillar-note { font-size: 16px; line-height: 1.5; margin-top: 5px; }
+    .pillar-bar-track { height: 3px; margin-top: 6px; }
 
-    /* ── TAB BAR: scrollable, generous tap targets ── */
-    .tab-bar {
-      padding: 0 12px;
-      overflow-x: auto;
-      flex-wrap: nowrap;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
+    /* Tab bar — scrollable, large tap targets */
+    .tab-bar { padding: 0 14px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
     .tab-bar::-webkit-scrollbar { display: none; }
-    .tab {
-      padding: 15px 16px;
-      font-size: 14px;
-      white-space: nowrap;
-      flex-shrink: 0;
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-    }
+    .tab { padding: 14px 16px; font-size: 16px; white-space: nowrap; flex-shrink: 0; min-height: 44px; display: flex; align-items: center; }
 
-    /* ── TAB CONTENT ── */
-    .tab-content { padding: 16px 14px; }
+    /* Tab content */
+    .tab-content { padding: 16px; }
 
-    /* ── TACTICAL BRIEF TEXT ── */
-    .brief-text { font-size: 15px; line-height: 1.85; }
-    .brief-heading { font-size: 13px; letter-spacing: 0.18em; }
+    /* Tactical brief text */
+    .brief-text { font-size: 15px; line-height: 1.8; }
+    .brief-heading { font-size: 16px; letter-spacing: 0.15em; }
 
-    /* ── FORECAST GRID: 4-across (day name + date + pill) ── */
-    .forecast-grid { grid-template-columns: repeat(4, 1fr); gap: 5px; }
-    .forecast-day { padding: 10px 5px; }
-    .forecast-day-name { font-size: 11px; letter-spacing: 0.06em; }
+    /* Forecast grid */
+    .forecast-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .forecast-day { padding: 10px 6px; }
+    .forecast-day-name { font-size: 15px; }
     .forecast-day-date { font-size: 20px; }
-    .forecast-day-stats { font-size: 11px; line-height: 1.55; }
-    .forecast-score-pill { font-size: 13px; padding: 2px 6px; }
+    .forecast-day-stats { font-size: 15px; line-height: 1.5; }
+    .forecast-score-pill { font-size: 16px; }
 
-    /* ── BRIEF TABLE: hide middle Parameter column ── */
-    .brief-table { font-size: 13px; width: 100%; }
+    /* Brief table — hide Parameter column on mobile, stack Score into Value cell */
+    .brief-table { font-size: 15px; width: 100%; }
     .brief-table th, .brief-table td { padding: 8px 8px; }
     .brief-table th:nth-child(2),
-    .brief-table td:nth-child(2) { display: none; }
+    .brief-table td:nth-child(2) { display: none; } /* hide Parameter col */
+    .brief-table th:nth-child(3) { content: 'Conditions'; }
 
-    /* ── SOLUNAR ── */
+    /* Solunar on small screens — tighten up */
     #solunarWindows { font-size: 12px !important; }
-    #moonPhase { font-size: 14px !important; }
+    #moonPhase { font-size: 15px !important; }
 
-    /* ── MAP TAB ── */
-    .map-controls { flex-wrap: wrap; gap: 6px; }
-    .map-btn { font-size: 13px; padding: 9px 11px; min-height: 40px; }
-    .map-container { height: 380px; }
+    /* Map tab */
+    .map-controls { flex-wrap: wrap; gap: 6px; padding: 12px 14px; }
+    .map-btn { font-size: 16px; padding: 7px 10px; min-height: 36px; }
+    .map-container { height: 420px; }
 
-    /* ── FUEL BUDGET ── */
-    .fuel-row-label { width: 90px; font-size: 13px; }
-    .fuel-row-val { font-size: 13px; }
-    .fuel-row { font-size: 13px; }
+    /* Fuel budget */
+    .fuel-row-label { width: 90px; font-size: 16px; }
+    .fuel-row-val { font-size: 16px; }
 
-    /* ── INTEL CARDS ── */
-    .intel-card { padding: 12px 12px; }
-    .intel-card-label { font-size: 11px; letter-spacing: 0.1em; }
-    .intel-card-value { font-size: 17px; }
-    .intel-card-detail { font-size: 13px; line-height: 1.5; }
+    /* Intel cards */
+    .intel-card { padding: 12px 14px; }
+    .intel-card-label { font-size: 16px; }
+    .intel-card-value { font-size: 16px; }
+    .intel-card-detail { font-size: 16px; }
 
-    /* ── FORM INPUTS: 16px prevents iOS auto-zoom ── */
-    .select-field, .input-field, .textarea-field { font-size: 16px; min-height: 44px; }
-    .input-label { font-size: 13px; }
+    /* Form inputs — 16px prevents iOS auto-zoom */
+    .select-field, .input-field { font-size: 16px; min-height: 44px; }
+    .input-label { font-size: 16px; }
 
-    /* ── REPORT CARDS ── */
-    .report-card { padding: 14px 12px; }
-    .report-card-source { font-size: 11px; }
+    /* Report cards */
     .report-card-title { font-size: 15px; }
-    .report-card-body { font-size: 14px; line-height: 1.7; }
-    .report-card-date { font-size: 12px; }
-    .report-signal { font-size: 11px; }
+    .report-card-body { font-size: 16px; }
 
-    /* ── GENERAL BUTTONS ── */
-    .btn { min-height: 48px; font-size: 15px; }
-
-    /* ── GAP DISPLAY ── */
-    .gap-value { font-size: 20px; }
-    .gap-meta { font-size: 12px; }
+    /* General buttons */
+    .btn { min-height: 44px; }
   }
 
-  /* ── SMALL PHONES: iPhone SE / compact Androids ── */
   @media (max-width: 390px) {
-    .logo-mark { font-size: 20px !important; }
-    .verdict-score { font-size: 48px; }
-    .verdict-call { font-size: 19px; }
-    .live-metric-value { font-size: 27px; }
-    .tab { padding: 14px 13px; font-size: 13px; }
-    .species-btn { min-height: 48px; }
-    .species-name { font-size: 14px; }
-    .species-season { font-size: 10px; }
+    /* Small phones — iPhone SE / compact Androids */
+    .verdict-score { font-size: 44px; }
+    .verdict-call { font-size: 16px; }
+    .live-metric-value { font-size: 19px; }
+    .tab { padding: 13px 13px; font-size: 16px; }
+    .species-btn { padding: 6px 10px; }
+    .species-name { font-size: 16px; }
+    /* Bite windows — very compact on SE */
     #solunarWindows { font-size: 11px !important; }
-    #moonPhase { font-size: 13px !important; }
+    #moonPhase { font-size: 14px !important; }
+    .logo-mark { font-size: 26px !important; }
+    .logo-tagline { display: none; } /* hide tagline on very small screens */
   }
 
-  /* ── LANDSCAPE PHONE: restore two-column when rotated ── */
+  /* Landscape phone — restore two-column when rotated */
   @media (max-height: 500px) and (max-width: 900px) {
     .verdict-banner { padding: 8px 16px; flex-direction: row; align-items: center; gap: 16px; }
     .verdict-right { display: flex; gap: 8px; width: auto; }
-    .verdict-right .btn { width: auto; padding: 8px 14px; font-size: 15px; min-height: 38px; }
+    .verdict-right .btn { width: auto; padding: 8px 14px; font-size: 16px; min-height: 38px; }
     .verdict-score { font-size: 38px; }
     .verdict-call { font-size: 16px; }
     .app-layout { grid-template-columns: 300px 1fr; }
     .left-panel { border-right: 1px solid var(--border); border-bottom: none; overflow-y: auto; max-height: calc(100vh - 120px); }
-    /* Restore species bar to horizontal in landscape */
-    .species-options { display: flex; flex-wrap: nowrap; overflow-x: auto; }
-    .species-btn { flex-direction: row; align-items: center; min-height: 38px; padding: 6px 12px; }
-    .species-season { display: none; }
   }
 
   /* Data fetch status */
@@ -1529,9 +1432,9 @@
       <span id="liveStatusText">No data</span>
     </div>
     <div class="date-display" id="dateDisplay">--</div>
-    <div class="header-meta" style="display:flex;align-items:center;gap:20px;">
+    <div style="display:flex;align-items:center;gap:20px;">
       <!-- Moon phase + solunar -->
-      <div class="header-bite-windows" style="text-align:right;">
+      <div style="text-align:right;">
         <div style="font-family:var(--mono);font-size: 15px;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">Bite Windows</div>
         <div id="moonPhase" style="font-family:var(--mono);font-size:16px;color:var(--text-secondary);margin-bottom:3px;">—</div>
         <div id="solunarWindows" style="font-family:var(--mono);font-size: 15px;line-height:1.8;">—</div>
@@ -1590,6 +1493,11 @@
   </div>
 </div>
 
+<!-- 7-Day Forecast Banner -->
+<div id="forecastBanner" style="display:flex;overflow-x:auto;gap:6px;padding:8px 16px;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border);scrollbar-width:none;-ms-overflow-style:none;align-items:center;">
+  <span style="font-family:var(--mono);font-size:12px;color:var(--text-dim);letter-spacing:0.06em;flex-shrink:0;margin-right:4px;">7 DAYS</span>
+</div>
+
 <!-- Verdict Banner -->
 <div class="app-layout">
   <div class="verdict-banner state-idle" id="verdictBanner" style="grid-column:1/-1">
@@ -1607,33 +1515,6 @@
 
   <!-- Left Panel -->
   <div class="left-panel">
-
-    <!-- Live Data Status -->
-    <div class="panel-section" id="dataStatusSection">
-      <div class="section-label">Where we're pulling from</div>
-      <div id="dataSourcesList">
-        <div class="fetch-row">
-          <span class="fetch-icon">◈</span>
-          <span>Swell &amp; sea state (Open-Meteo)</span>
-          <span class="fetch-status" id="src-marine">—</span>
-        </div>
-        <div class="fetch-row">
-          <span class="fetch-icon">◈</span>
-          <span>Wind forecast (Open-Meteo)</span>
-          <span class="fetch-status" id="src-wind">—</span>
-        </div>
-        <div class="fetch-row">
-          <span class="fetch-icon">◈</span>
-          <span>SST &amp; currents (Open-Meteo)</span>
-          <span class="fetch-status" id="src-copernicus">—</span>
-        </div>
-        <div class="fetch-row">
-          <span class="fetch-icon">◈</span>
-          <span>Field Intel (Google)</span>
-          <span class="fetch-status" id="src-skipper">—</span>
-        </div>
-      </div>
-    </div>
 
     <!-- Live metrics -->
     <div class="panel-section">
@@ -1858,6 +1739,33 @@
         </div>
       </div>
     </div>
+    <!-- Live Data Status -->
+    <div class="panel-section" id="dataStatusSection">
+      <div class="section-label">Where we're pulling from</div>
+      <div id="dataSourcesList">
+        <div class="fetch-row">
+          <span class="fetch-icon">◈</span>
+          <span>Swell &amp; sea state (Open-Meteo)</span>
+          <span class="fetch-status" id="src-marine">—</span>
+        </div>
+        <div class="fetch-row">
+          <span class="fetch-icon">◈</span>
+          <span>Wind forecast (Open-Meteo)</span>
+          <span class="fetch-status" id="src-wind">—</span>
+        </div>
+        <div class="fetch-row">
+          <span class="fetch-icon">◈</span>
+          <span>SST &amp; currents (Open-Meteo)</span>
+          <span class="fetch-status" id="src-copernicus">—</span>
+        </div>
+        <div class="fetch-row">
+          <span class="fetch-icon">◈</span>
+          <span>Field Intel (Google)</span>
+          <span class="fetch-status" id="src-skipper">—</span>
+        </div>
+      </div>
+    </div>
+
 
   </div>
 
@@ -2330,6 +2238,7 @@ async function fetchLiveData() {
     scoreMatrix();       // score first so base scores are set
     updateVerdict();
     buildForecastGrid(); // then rebuild grid with correct base scores
+    buildForecastBanner();
 
     setStatus('src-copernicus', 'ok');
 
@@ -2603,6 +2512,7 @@ function setSpecies(speciesKey, btn) {
     scoreMatrix();
     updateVerdict();
     buildForecastGrid();
+  buildForecastBanner();
     updateSeasonContext(speciesKey);
   } else {
     // Data not yet loaded — trigger fetch which auto-runs analysis on complete
@@ -3145,6 +3055,40 @@ function buildForecastGrid() {
   });
 }
 
+function buildForecastBanner() {
+  const banner = document.getElementById('forecastBanner');
+  if (!banner) return;
+  const days = state.forecastDays;
+  if (!days || !days.length) return;
+
+  const baseScore = (state.scores.sst || 0) + (state.scores.alt || 0) + (state.scores.eac || 0);
+  const scoredDays = days.map(d => ({ ...d, estimatedTotal: d.accessScore + baseScore }));
+  let bestIdx = 0;
+  scoredDays.forEach((d, i) => { if (d.estimatedTotal > scoredDays[bestIdx].estimatedTotal) bestIdx = i; });
+
+  // Keep the "7 DAYS" label, clear the rest
+  const label = banner.querySelector('span');
+  banner.innerHTML = '';
+  if (label) banner.appendChild(label);
+
+  scoredDays.forEach((day, i) => {
+    const score = day.estimatedTotal;
+    const isBest = i === bestIdx;
+    const cls = score >= 9 ? 'go' : score >= 6 ? 'warn' : 'nogo';
+    const chip = document.createElement('div');
+    chip.className = `banner-day banner-${isBest ? 'best' : cls}`;
+    chip.title = `${day.dayName} ${day.dayNum}: ${score}/12 — ${day.maxWind}kt, ${day.maxSwell}m`;
+    chip.onclick = () => { switchTab('forecast', document.querySelector('.tab:nth-child(3)')); showForecastDetail(day, score); };
+    chip.innerHTML = `
+      ${isBest ? '<div class="banner-best-dot"></div>' : ''}
+      <div class="banner-day-name">${day.dayName}</div>
+      <div class="banner-day-date">${day.dayNum}</div>
+      <div class="banner-day-score ${cls}">${score}/12</div>
+    `;
+    banner.appendChild(chip);
+  });
+}
+
 function showForecastDetail(day, score) {
   score = score ?? day.estimatedTotal ?? 0;
   const verdict = score >= 9 ? 'GO' : score >= 6 ? 'CONDITIONAL GO' : 'NO-GO';
@@ -3569,151 +3513,6 @@ function setStatus(id, status) {
   if (!el) return;
   el.className = 'fetch-status ' + status;
   el.textContent = status === 'ok' ? 'LIVE' : status === 'loading' ? 'FETCHING' : status === 'err' ? 'ERROR' : '—';
-}
-
-// ═══════════════════════════════════════
-// PWA — SERVICE WORKER + INSTALL PROMPT
-// ═══════════════════════════════════════
-
-// Register service worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => {
-        console.log('[SW] Registered, scope:', reg.scope);
-        // If a new SW is waiting, prompt user to refresh
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdateBanner();
-            }
-          });
-        });
-      })
-      .catch(err => console.warn('[SW] Registration failed:', err));
-  });
-}
-
-// Install prompt — capture the beforeinstallprompt event
-let deferredInstallPrompt = null;
-
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  // Show the install banner after a short delay (don't interrupt initial load)
-  setTimeout(showInstallBanner, 8000);
-});
-
-function showInstallBanner() {
-  // Don't show if already installed (standalone mode)
-  if (window.matchMedia('(display-mode: standalone)').matches) return;
-  // Don't show if already dismissed this session
-  if (sessionStorage.getItem('sw-install-dismissed')) return;
-
-  const banner = document.createElement('div');
-  banner.id = 'pwa-install-banner';
-  banner.innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
-      <span style="font-size:20px;flex-shrink:0;">◈</span>
-      <div style="min-width:0;">
-        <div style="font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);">Add to Home Screen</div>
-        <div style="font-family:var(--mono);font-size:12px;color:var(--text-secondary);margin-top:2px;">One tap access — works offline</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;flex-shrink:0;">
-      <button onclick="installPWA()" style="font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;padding:8px 16px;border:1px solid var(--accent);background:rgba(0,180,216,0.12);color:var(--accent);cursor:pointer;">Install</button>
-      <button onclick="dismissInstallBanner()" style="font-family:var(--mono);font-size:13px;padding:8px 12px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;">✕</button>
-    </div>
-  `;
-  banner.style.cssText = `
-    position:fixed;bottom:0;left:0;right:0;z-index:500;
-    background:var(--deep);border-top:1px solid var(--border-light);
-    padding:14px 16px;display:flex;align-items:center;gap:12px;
-    box-shadow:0 -4px 20px rgba(0,0,0,0.4);
-    animation:slideUp 0.3s ease;
-  `;
-
-  // Add slide-up keyframe if not already present
-  if (!document.getElementById('pwa-styles')) {
-    const style = document.createElement('style');
-    style.id = 'pwa-styles';
-    style.textContent = `@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`;
-    document.head.appendChild(style);
-  }
-
-  document.body.appendChild(banner);
-}
-
-async function installPWA() {
-  if (!deferredInstallPrompt) return;
-  deferredInstallPrompt.prompt();
-  const { outcome } = await deferredInstallPrompt.userChoice;
-  console.log('[PWA] Install outcome:', outcome);
-  deferredInstallPrompt = null;
-  dismissInstallBanner();
-}
-
-function dismissInstallBanner() {
-  const banner = document.getElementById('pwa-install-banner');
-  if (banner) banner.remove();
-  sessionStorage.setItem('sw-install-dismissed', '1');
-}
-
-// iOS Safari — no beforeinstallprompt, show manual instructions instead
-function isIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-}
-
-function isInStandaloneMode() {
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-}
-
-if (isIOS() && !isInStandaloneMode()) {
-  setTimeout(() => {
-    if (sessionStorage.getItem('sw-install-dismissed')) return;
-    const banner = document.createElement('div');
-    banner.id = 'pwa-install-banner';
-    banner.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
-        <span style="font-size:20px;flex-shrink:0;">◈</span>
-        <div style="min-width:0;">
-          <div style="font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);">Add to Home Screen</div>
-          <div style="font-family:var(--mono);font-size:12px;color:var(--text-secondary);margin-top:2px;">Tap <strong style="color:var(--text-primary);">Share ↑</strong> then <strong style="color:var(--text-primary);">Add to Home Screen</strong></div>
-        </div>
-      </div>
-      <button onclick="dismissInstallBanner()" style="font-family:var(--mono);font-size:13px;padding:8px 12px;border:1px solid var(--border);background:transparent;color:var(--text-dim);cursor:pointer;flex-shrink:0;">✕</button>
-    `;
-    banner.style.cssText = `
-      position:fixed;bottom:0;left:0;right:0;z-index:500;
-      background:var(--deep);border-top:1px solid var(--border-light);
-      padding:14px 16px;display:flex;align-items:center;gap:12px;
-      box-shadow:0 -4px 20px rgba(0,0,0,0.4);
-      animation:slideUp 0.3s ease;
-    `;
-    if (!document.getElementById('pwa-styles')) {
-      const style = document.createElement('style');
-      style.id = 'pwa-styles';
-      style.textContent = `@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`;
-      document.head.appendChild(style);
-    }
-    document.body.appendChild(banner);
-  }, 8000);
-}
-
-function showUpdateBanner() {
-  const banner = document.createElement('div');
-  banner.style.cssText = `
-    position:fixed;top:0;left:0;right:0;z-index:600;
-    background:var(--accent-dim);border-bottom:1px solid var(--accent);
-    padding:10px 16px;display:flex;align-items:center;justify-content:space-between;
-    font-family:var(--mono);font-size:13px;color:var(--text-primary);letter-spacing:0.06em;
-  `;
-  banner.innerHTML = `
-    <span>◈ Update available</span>
-    <button onclick="location.reload()" style="background:var(--accent);color:var(--black);border:none;padding:5px 12px;font-family:var(--mono);font-size:13px;cursor:pointer;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Reload</button>
-  `;
-  document.body.prepend(banner);
 }
 </script>
 </body>
