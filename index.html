@@ -375,14 +375,21 @@
 
   .section-label {
     font-family: var(--mono);
-    font-size: 16px;
-    letter-spacing: 0.12em;
+    font-size: 15px;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: var(--text-dim);
+    color: var(--accent);
     margin-bottom: 16px;
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .section-label::before {
+    content: '◈';
+    color: var(--accent);
+    font-size: 13px;
+    opacity: 0.8;
   }
 
   .section-label::after {
