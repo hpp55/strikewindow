@@ -18,7 +18,6 @@
     --black: #080c0f;
     --deep: #0d1419;
     --surface: #111820;
-    --surface-2: #192230;
     --panel: #151d25;
     --border: #1e2d3a;
     --border-light: #243645;
@@ -1846,6 +1845,10 @@
           <div class="brief-heading">◈ Risk Factors</div>
           <div class="brief-text" id="brief-risks"></div>
         </div>
+        <div class="brief-section">
+          <div class="brief-heading">◈ Navigator Recommendation</div>
+          <div class="brief-text" id="brief-recommendation"></div>
+        </div>
       </div>
     </div>
 
@@ -2514,7 +2517,7 @@ const SPECIES = {
     name: 'Kingfish',
     icon: '🎯',
     // Year-round resident; seasonal reflects feeding activity peaks
-    season: { peak: [2,3,4,8,9,10,11], open: [5,6,7], closed: [] },
+    season: { peak: [2,3,4,9,10,11], open: [0,1,5,6,7,8], closed: [] },
     tagline: 'Kingfish year-round · TIDE DOMINANT · Long Reef · The Peak · 12 Mile',
     gapTypical: 10, gapMax: 15,
     eacCritical: false,
@@ -2529,8 +2532,8 @@ const SPECIES = {
     searchTerms: 'Sydney offshore kingfish yellowtail fishing report Long Reef 12 Mile',
     trollBurnMod: 0.7,
     defaultGap: 10,
-    seasonStatus: (m) => [2,3,4,8,9,10,11].includes(m) ? 'peak' : [5,6,7].includes(m) ? 'open' : 'closed',
-    seasonLabel: (m) => [2,3,4,8,9,10,11].includes(m) ? 'PEAK SEASON' : 'SEASON OPEN'
+    seasonStatus: (m) => [2,3,4,9,10,11].includes(m) ? 'peak' : 'open',
+    seasonLabel:  (m) => [2,3,4,9,10,11].includes(m) ? 'PEAK SEASON' : 'YEAR ROUND'
   },
 
   snapper: {
@@ -2636,28 +2639,6 @@ function scoreMatrix() {
   if (!d) return;
   const sp = SPECIES[currentSpecies];
   const month = new Date().getMonth(); // 0=Jan
-
-  // ── SPECIES OVERRIDES ──
-  // Real-world blockers and warnings the oceanographic data can't detect.
-  const overrides = getSpeciesOverrides(currentSpecies, month);
-  if (overrides.hardBlock) {
-    // Zero the matrix and surface the reason in the verdict banner
-    state.scores = { access:0, sst:0, alt:0, eac:0, rawTotal:0, finalTotal:0, mult:1 };
-    state.notes  = { access: overrides.reason, sst:'', alt:'', eac:'' };
-    setPillar('access', 0, overrides.reason);
-    setPillar('sst',    0, '');
-    setPillar('alt',    0, '');
-    setPillar('eac',    0, '');
-    const banner  = document.getElementById('verdictBanner');
-    const scoreEl = document.getElementById('verdictScore');
-    const callEl  = document.getElementById('verdictCall');
-    const subEl   = document.getElementById('verdictSub');
-    if (scoreEl) scoreEl.innerHTML = '0<span>/12</span>';
-    if (banner)  { banner.className = 'verdict-banner state-nogo'; }
-    if (callEl)  callEl.textContent = 'SPECIES NOT PRESENT';
-    if (subEl)   subEl.textContent  = overrides.reason;
-    return;
-  }
 
   // ── UNIVERSAL PENALTIES ──
   // Applied after pillar scoring as raw-score deductions
@@ -2972,19 +2953,8 @@ function scoreMatrix() {
   if (reports === 'red-hot')  { eac = Math.min(3, eac + 1); eacNote += ' ✓ Reports: Red hot.'; }
   if (reports === 'dead')     { eac = Math.max(0, eac - 1); eacNote += ' Reports: Dead.'; }
 
-  // Season warning — appended to access note so it surfaces in Pillar 1 display
-  if (overrides.seasonWarning) {
-    accessNote += ` ⚠ ${overrides.reason}`;
-  }
-
   // ── APPLY UNIVERSAL PENALTIES ──
-  // Kingfish and Snapper: tide is the dominant variable — double its weight in the raw total.
-  // The pillar bar still displays alt/3 (the underlying 0–3 score is unchanged).
-  // This adds one extra alt point to raw before penalties and multiplier.
-  const tideWeightedAlt = (currentSpecies === 'kingfish' || currentSpecies === 'snapper')
-    ? alt * 2
-    : alt;
-  let rawTotal = Math.min(access + sst + tideWeightedAlt + eac, 12);
+  let rawTotal = access + sst + alt + eac;
 
   if (postStormPenalty > 0) {
     rawTotal = Math.max(0, rawTotal - 1);
@@ -3038,32 +3008,58 @@ function updateVerdict() {
   const callEl  = document.getElementById('verdictCall');
   const subEl   = document.getElementById('verdictSub');
 
-  const seasonLabel = sp.seasonLabel(month);
-  const multPct = mult !== undefined ? Math.round(mult * 100) : 100;
-  const seasonNote = mult !== undefined && mult < 1.0
-    ? ` Season modifier: ×${mult.toFixed(2)} (${seasonLabel}).`
-    : '';
+  const status = sp.seasonStatus(month);
 
-  // Normal scoring — seasonal multiplier already baked into finalTotal
+  // Plain-English single weakest factor — reads as a skipper would say it
+  const d = state.liveData || {};
+  const weakFactor = access < 2
+    ? `${d.wind || '—'}kt wind and ${d.swell || '—'}m swell`
+    : sst < 2
+    ? (currentSpecies === 'snapper' ? 'water is too warm for snapper' : 'water temp and colour change are weak')
+    : alt < 2
+    ? (currentSpecies === 'snapper' || currentSpecies === 'kingfish' ? "tide isn't moving" : 'eddy structure is soft')
+    : eac < 2
+    ? "current isn't stacking bait"
+    : 'not every condition is dialled in';
+
+  // Return-month strings for off-season sub-line
+  const returnWindow = {
+    yft:      'June',
+    marlin:   'November',
+    mahi:     'December',
+    kingfish: null,
+    snapper:  null,
+  };
+  const isOffSeason = status === 'closed' && returnWindow[currentSpecies];
+
   scoreEl.innerHTML = total + '<span>/12</span>';
   banner.className = 'verdict-banner';
 
   if (total >= 9) {
     banner.classList.add('state-go');
     callEl.textContent = 'STRIKE — GO';
-    subEl.textContent = `Score ${total}/12 — conditions stacked for ${sp.name}.${seasonNote} Get the spread out.`;
+    subEl.textContent = 'Conditions are stacked. Get out there.';
+
   } else if (total >= 6) {
     banner.classList.add('state-marginal');
     callEl.textContent = 'CONDITIONAL GO';
-    subEl.textContent = `Score ${total}/12 — workable. Identify the weak pillar before committing fuel.${seasonNote}`;
+    subEl.textContent = isOffSeason
+      ? `Off season. Come back ${returnWindow[currentSpecies]}.`
+      : `Worth the run — ${weakFactor}. Know your turn-home before you leave.`;
+
   } else if (total >= 3) {
     banner.classList.add('state-nogo');
     callEl.textContent = 'PULL THE PIN';
-    subEl.textContent = `Score ${total}/12 — not worth the fuel. Check back in 24–48hrs.${seasonNote}`;
+    subEl.textContent = isOffSeason
+      ? `Off season. Come back ${returnWindow[currentSpecies]}.`
+      : `Leave her on the trailer. ${weakFactor}. Check back in 48hrs.`;
+
   } else {
     banner.classList.add('state-nogo');
     callEl.textContent = 'NO GO';
-    subEl.textContent = `Score ${total}/12 — conditions not suitable for ${sp.name} today.${seasonNote} Leave her on the trailer.`;
+    subEl.textContent = isOffSeason
+      ? `Off season. Come back ${returnWindow[currentSpecies]}.`
+      : `Not today. ${weakFactor}. Don't burn the fuel.`;
   }
 }
 
@@ -3149,9 +3145,10 @@ function getSpeciesOverrides(speciesKey, month) {
       break;
 
     case 'kingfish':
-      // Kingfish are year-round with no closed months — no override needed.
-      // Peak activity Mar–May and Oct–Dec; reduced density Jun–Sep but always present.
-      // No block or warning — the seasonal multiplier handles density variation.
+      if (status === 'closed') {
+        overrides.seasonWarning = true;
+        overrides.reason = `Kingfish are present but at reduced density outside Apr–Sep. Smaller fish and inconsistent biting. Score reflects conditions only.`;
+      }
       break;
 
     case 'snapper':
@@ -3625,8 +3622,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
       alt < 2    ? `Warm core eddy (+${d.ssh.toFixed(0)}cm — eddy's soft, not the wall you want)` : null,
       eac < 2    ? `Current (${d.eac_speed}kt — not pushing hard enough to stack bait)` : null
     ].filter(Boolean);
-    const weakStr = weakPillar.length > 0 ? weakPillar[0] : 'not every condition is dialled in';
-    assessment += `Worth the run — ${weakStr}. Know your turn-home before you leave the ramp.`;
+    assessment += `${weakPillar.length > 0 ? `${weakPillar[0]} is the weak link` : 'Not all pillars are stacked'}. It's a go if you're happy with the risk — but it's not a high-confidence day. Know your turn-home time before you leave the ramp.`;
   } else {
     assessment += `Not worth the fuel today. ${access === 0 ? `${d.wind}kt and ${d.swell}m — leave her on the trailer.` : `Water's cold and the EAC isn't stacking. Nothing out there to find right now.`} Check back in 48hrs — conditions are moving.`;
   }
@@ -3720,8 +3716,24 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   if (gap && gap > 25)        { const transitOnly = Math.round((gap / getBoatSpec().cruiseSpeed) * getBoatSpec().cruiseBurn * 2); risks.push(`<strong>Fuel:</strong> ${gap}nm is ~${transitOnly}L in transit alone before you've wet a line. Fuel discipline is critical — know your turn-home number.`); }
   if (reports === 'dead')     risks.push(`<strong>Bite:</strong> Recent reports are dead. Multiple failed runs suggest fish may have moved or conditions are suppressing feeding.`);
   if (total < 6)              risks.push(`<strong>ROI:</strong> The score doesn't justify the fuel bill. A bad day offshore costs the same as a good one.`);
-  const _warnMonths = new Date().toLocaleDateString('en-AU', { month: 'long' }) + '–' + new Date(new Date().getFullYear(), new Date().getMonth() + 1).toLocaleDateString('en-AU', { month: 'long' });
-  risks.push(`<strong>Weather window:</strong> Always check BOM forecast immediately before departure. Conditions can shift fast in ${_warnMonths}.`);
+  risks.push(`<strong>Weather window:</strong> Always check BOM forecast immediately before departure. Conditions can shift fast in May–June.`);
+
+  // ── Recommendation ──
+  let rec = `<strong style="color:${color};font-size:16px;">${verdict}.</strong><br><br>`;
+  if (total >= 9) {
+    rec += `This is the run. Conditions are stacked for <strong>${sp.name}</strong> — ${d.wind}kt wind, ${d.swell}m swell, ${d.sst_delta.toFixed(1)}°C thermal wall. Depart 0530, work the ${sp.primaryTarget.split('(')[0].trim()}, set a hard turn-time and stick to it.`;
+  } else if (total >= 6) {
+    rec += `A run is defensible for <strong>${sp.name}</strong> but not optimal. Identify the weak pillar, weigh it against the gap cost, and set a hard ${total >= 8 ? '1400' : '1300'} turn-home. If conditions are trending better tomorrow, wait.`;
+  } else {
+    const bestDay = state.forecastDays.reduce((best, d, i) => {
+      const { score: aScore, stormPenalty } = calcForecastAccess(d.maxWind, parseFloat(d.maxSwell), parseFloat(d.maxSwellPeriod), currentSpecies, d.dayOffset ?? i);
+      const raw  = Math.max(0, aScore + (state.scores.sst||0) + (state.scores.alt||0) + (state.scores.eac||0) - stormPenalty);
+      const mult = SEASONAL_MULT[currentSpecies]?.[new Date().getMonth()] ?? 1;
+      const s    = Math.max(0, Math.min(12, Math.round(raw * mult)));
+      return s > best.score ? {day: d, score: s} : best;
+    }, {day: state.forecastDays[0], score: 0});
+    rec += `Score of ${total}/12 — not worth burning the fuel for <strong>${sp.name}</strong> today. ${bestDay.day ? `Best upcoming window: <strong>${bestDay.day.dayName} ${bestDay.day.dayNum}</strong> — ${bestDay.day.maxWind}kt wind, ${bestDay.day.maxSwell}m swell.` : 'Monitor and reforecast in 48hrs.'}`;
+  }
 
   // ── Render ──
   document.getElementById('briefingIdle').style.display = 'none';
@@ -3732,6 +3744,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   document.getElementById('brief-target').innerHTML = target;
   document.getElementById('brief-runplan').innerHTML = runplan;
   document.getElementById('brief-risks').innerHTML = `<ul style="padding-left:18px;line-height:2.2">${risks.map(r=>`<li>${r}</li>`).join('')}</ul>`;
+  document.getElementById('brief-recommendation').innerHTML = rec;
 }
 
 // ═══════════════════════════════════════
@@ -3884,6 +3897,10 @@ const GATHERED_INTEL = [
 ];
 
 async function searchCatchReports() {
+  const btn = document.getElementById('searchReportsBtn');
+  btn.disabled = true;
+  btn.textContent = '◌ Searching...';
+
   // Show badge on tab
   document.getElementById('reportsBadge').style.display = 'inline';
 
@@ -3893,6 +3910,9 @@ async function searchCatchReports() {
   // Then use AI to generate a synthesised species-aware summary
   const filtered = GATHERED_INTEL.filter(r => r.tags.includes(currentSpecies));
   await generateReportsSummary(GATHERED_INTEL, filtered.length);
+
+  btn.disabled = false;
+  btn.textContent = '↺ Refresh Reports';
 }
 
 function renderReports(reports) {
