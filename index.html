@@ -2205,7 +2205,8 @@ async function fetchLiveData() {
 
     updateLoadingStep('Fetching wind forecast...');
     const windCurrentUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kn&timezone=Australia/Sydney`;
-    const windDailyUrl   = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum&wind_speed_unit=kn&timezone=Australia/Sydney&forecast_days=7`;
+    // Add wind_direction_10m_dominant to daily for forecast detail panel
+    const windDailyUrl   = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,precipitation_sum&wind_speed_unit=kn&timezone=Australia/Sydney&forecast_days=7`;
 
     const [marineCurrentRes, marineDailyRes, windCurrentRes, windDailyRes] = await Promise.all([
       fetch(marineCurrentUrl),
@@ -2225,37 +2226,54 @@ async function fetchLiveData() {
     updateLoadingStep('Processing oceanographic data...');
 
     // Current conditions
-    const waveH      = marineCurrent.current.wave_height;
-    const swellH     = marineCurrent.current.swell_wave_height;
-    const swellP     = marineCurrent.current.swell_wave_period;
-    const windSpd    = windCurrent.current.wind_speed_10m;
-    const windDir    = windCurrent.current.wind_direction_10m;
-    const windGust   = windCurrent.current.wind_gusts_10m;
+    const waveH    = marineCurrent.current.wave_height;
+    const swellH   = marineCurrent.current.swell_wave_height;
+    const swellP   = marineCurrent.current.swell_wave_period;   // confirmed present from API
+    const windSpd  = windCurrent.current.wind_speed_10m;
+    const windDir  = windCurrent.current.wind_direction_10m;
+    const windGust = windCurrent.current.wind_gusts_10m;
+    // Today's forecast max wind — best available proxy for storm penalty
+    // (Open-Meteo doesn't expose hourly history)
+    const windMax24h = windDaily.daily?.wind_speed_10m_max?.[0] ?? windSpd;
 
-    // SST + SSH: fetch live from Open-Meteo marine (sea surface temp at offshore coords)
-    // and derive SSH proxy from wave/swell data. EAC speed approximated from current velocity.
-    updateLoadingStep('Fetching SST data...');
-    const sstUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=-34.0&longitude=151.7&hourly=sea_surface_temperature&timezone=Australia/Sydney&forecast_days=1`;
+    // SST: use EAC-core coord (-33.5, 153.5) as warm point — gives meaningful delta vs inshore
+    // Cold point: inshore shelf (-34.5, 151.2) — upwelling zone, consistently cooler
+    updateLoadingStep('Fetching SST & current data...');
+    const sstWarmUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=-33.5&longitude=153.5&hourly=sea_surface_temperature&timezone=Australia/Sydney&forecast_days=1`;
     const sstColdUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=-34.5&longitude=151.2&hourly=sea_surface_temperature&timezone=Australia/Sydney&forecast_days=1`;
+    // Ocean current at shelf edge — velocity and direction
     const currentUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=-34.1&longitude=152.5&hourly=ocean_current_velocity,ocean_current_direction&timezone=Australia/Sydney&forecast_days=1`;
 
-    const [sstRes, sstColdRes, currentRes] = await Promise.all([
-      fetch(sstUrl), fetch(sstColdUrl), fetch(currentUrl)
+    const [sstWarmRes, sstColdRes, currentRes] = await Promise.all([
+      fetch(sstWarmUrl), fetch(sstColdUrl), fetch(currentUrl)
     ]);
-    const sstData    = await sstRes.json();
+    const sstWarmData = await sstWarmRes.json();
     const sstColdData = await sstColdRes.json();
     const currentData = await currentRes.json();
 
-    // Get current hour index
     const nowHour = new Date().getHours();
-    const sst_warm  = parseFloat((sstData.hourly?.sea_surface_temperature?.[nowHour] ?? 22.0).toFixed(1));
+    const sst_warm  = parseFloat((sstWarmData.hourly?.sea_surface_temperature?.[nowHour] ?? 22.0).toFixed(1));
     const sst_cold  = parseFloat((sstColdData.hourly?.sea_surface_temperature?.[nowHour] ?? 18.5).toFixed(1));
     const sst_delta = parseFloat(Math.max(0, sst_warm - sst_cold).toFixed(1));
-    const eac_speed = parseFloat((currentData.hourly?.ocean_current_velocity?.[nowHour] ?? 1.5).toFixed(1));
-    // SSH: proxy from EAC speed (stronger current = higher SSH anomaly on warm side)
-    const ssh = parseFloat(Math.max(0, eac_speed * 8 + (sst_delta > 2 ? 5 : 0)).toFixed(1));
 
-    // Build forecast
+    // EAC current: velocity in km/h (Open-Meteo marine hourly unit) + direction at shelf edge
+    const eac_speed_raw = currentData.hourly?.ocean_current_velocity?.[nowHour] ?? 2.8;
+    const eac_dir       = currentData.hourly?.ocean_current_direction?.[nowHour] ?? 180;
+    // Convert km/h → knots (÷ 1.852), cap at 5kt
+    const eac_speed = parseFloat(Math.min(eac_speed_raw / 1.852, 5).toFixed(1));
+
+    // eac_on_structure: EAC flows southward (150–250°). Strong southward current = on shelf
+    const isEacDirection = eac_dir >= 130 && eac_dir <= 270;
+    const eac_on_structure = (isEacDirection && eac_speed >= 1.5) ? 'yes'
+                           : (isEacDirection && eac_speed >= 0.7) ? 'partial'
+                           : 'no';
+
+    // SSH proxy: EAC speed is the best available signal for warm-core eddy height.
+    // True SSH requires CMEMS altimetry (auth required). This is an acknowledged proxy.
+    // Scale: 1kt EAC ≈ 12cm SLA; delta bonus for strong colour change
+    const ssh = parseFloat(Math.min(Math.max(0, eac_speed * 12 + (sst_delta > 2 ? 6 : 0)), 60).toFixed(1));
+
+    // Build forecast days — pass wind direction for display in detail panel
     const forecastDays = buildForecastData(marineDaily, windDaily);
 
     state.liveData = {
@@ -2263,11 +2281,13 @@ async function fetchLiveData() {
       windDir:         windDir,
       windGust:        Math.round(windGust),
       swell:           parseFloat(swellH || waveH).toFixed(1),
-      period:          Math.round(swellP),
+      // swell_period: canonical field name used by scoreMatrix and calcForecastAccess
+      swell_period:    parseFloat(swellP).toFixed(1),
+      wind_max_24h:    Math.round(windMax24h),
       sst_warm, sst_cold, sst_delta,
       ssh, eac_speed,
-      eac_on_structure: 'partial',
-      water_temp:      20.5,
+      eac_on_structure,
+      water_temp: parseFloat(sst_cold).toFixed(1),  // coastal water temp for display
       forecastDays
     };
 
@@ -2303,11 +2323,9 @@ async function fetchLiveData() {
 }
 
 // ── calcForecastAccess ───────────────────────────────────────────────────────
-// Mirrors the three species branches in scoreMatrix() P1.
-// dayOffset=0 means today — apply storm penalty if live wind was ≥25kt.
-// Returns { score: 0–3, note: string, stormPenalty: 0|1 }
-// IMPORTANT: stormPenalty is NOT subtracted from score here — callers deduct
-// it from the raw pillar total (matching scoreMatrix behaviour).
+// Mirrors scoreMatrix() P1 per-species thresholds exactly.
+// dayOffset=0 = today: storm penalty applied if wind_max_24h ≥ 25kt.
+// stormPenalty returned separately — callers deduct from raw total (matches scoreMatrix).
 function calcForecastAccess(maxWind, maxSwell, maxSwellPeriod, species, dayOffset) {
   let score = 0, note = '';
   const period = maxSwellPeriod || 10;
@@ -2330,7 +2348,7 @@ function calcForecastAccess(maxWind, maxSwell, maxSwellPeriod, species, dayOffse
     else                                        { score = 0; note = `${maxWind}kt / ${maxSwell}m — leave her on the trailer.`; }
   }
 
-  // Short-period swell penalty (mirrors scoreMatrix P1 note — reduces score directly)
+  // Short-period swell penalty — mirrors scoreMatrix
   if (period < 8 && maxSwell > 1.0) {
     score = Math.max(0, score - 1);
     note += ` Period ${period}s — short-period wind swell, steeper than it looks.`;
@@ -2338,14 +2356,13 @@ function calcForecastAccess(maxWind, maxSwell, maxSwellPeriod, species, dayOffse
     note += ` Period ${period}s — long easy swell.`;
   }
 
-  // Post-storm penalty — today only (dayOffset===0)
-  // Returned as separate flag; callers deduct from raw total (matches scoreMatrix)
+  // Post-storm penalty today only — deducted from raw total by callers
   let stormPenalty = 0;
   if (dayOffset === 0 && state.liveData) {
     const recentMax = state.liveData.wind_max_24h || state.liveData.wind || 0;
     if (recentMax >= 25) {
       stormPenalty = 1;
-      note += ` ⚠ Post-storm: ${recentMax}kt in recent window. First calm day after a blow — fish are regrouping.`;
+      note += ` ⚠ Post-storm: ${recentMax}kt today. First calm day after a blow — fish are regrouping.`;
     }
   }
 
@@ -2361,25 +2378,27 @@ function buildForecastData(marineDaily, windDaily) {
     const date = new Date(now);
     date.setDate(date.getDate() + d);
 
-    const maxWave        = marineDaily.daily?.wave_height_max?.[d]          ?? 1.5;
-    const maxSwell       = marineDaily.daily?.swell_wave_height_max?.[d]    ?? 1.5;
-    const maxSwellPeriod = marineDaily.daily?.swell_wave_period_max?.[d]    ?? 10;
-    const maxWind        = windDaily.daily?.wind_speed_10m_max?.[d]         ?? 10;
-    const maxGust        = windDaily.daily?.wind_gusts_10m_max?.[d]         ?? 15;
+    const maxWave        = marineDaily.daily?.wave_height_max?.[d]            ?? 1.5;
+    const maxSwell       = marineDaily.daily?.swell_wave_height_max?.[d]      ?? 1.5;
+    const maxSwellPeriod = marineDaily.daily?.swell_wave_period_max?.[d]      ?? 10;
+    const maxWind        = windDaily.daily?.wind_speed_10m_max?.[d]           ?? 10;
+    const maxGust        = windDaily.daily?.wind_gusts_10m_max?.[d]           ?? 15;
+    const windDirDom     = windDaily.daily?.wind_direction_10m_dominant?.[d]  ?? null;
 
-    // accessScore not stored — calculated at render time via calcForecastAccess
-    // so it always matches the current species selection
+    // accessScore NOT stored — computed at render time by calcForecastAccess
+    // so it always reflects the selected species
     days.push({
       dayName:        dayNames[date.getDay()],
       dayNum:         date.getDate(),
       month:          date.toLocaleDateString('en-AU', {month:'short'}),
       isToday:        d === 0,
-      dayOffset:      d,          // 0=today … 6=6 days out
+      dayOffset:      d,
       maxWave:        parseFloat(maxWave).toFixed(1),
       maxSwell:       parseFloat(maxSwell).toFixed(1),
-      maxSwellPeriod: Math.round(maxSwellPeriod),
+      maxSwellPeriod: parseFloat(maxSwellPeriod).toFixed(1),
       maxWind:        Math.round(maxWind),
       maxGust:        Math.round(maxGust),
+      windDirDom:     windDirDom !== null ? Math.round(windDirDom) : null,
     });
   }
   return days;
@@ -2399,7 +2418,7 @@ function updateMetrics() {
   const dirLabel = d.windDir !== undefined ? ' ' + degreesToCompass(d.windDir) : '';
   setMetric('m-wind', d.wind + dirLabel);
   setMetric('m-swell', d.swell);
-  setMetric('m-period', d.period);
+  setMetric('m-period', d.swell_period);
   setMetric('m-sst', d.sst_warm + '°');
   setMetric('m-ssh', '+' + d.ssh.toFixed(1) + 'cm');
   setMetric('m-water', d.water_temp + '°');
@@ -3345,28 +3364,28 @@ function buildForecastGrid() {
   const days = state.forecastDays;
   if (!days.length) return;
 
-  // Non-access pillars held constant from live fetch
   const sstScore = state.scores.sst || 0;
   const altScore = state.scores.alt || 0;
   const eacScore = state.scores.eac || 0;
   const month    = new Date().getMonth();
   const mult     = SEASONAL_MULT[currentSpecies]?.[month] ?? 1;
 
-  // Score each day with species-correct access thresholds + seasonal mult
   const scoredDays = days.map(d => {
-    const { score: accessScore, stormPenalty } = calcForecastAccess(d.maxWind, parseFloat(d.maxSwell), d.maxSwellPeriod, currentSpecies, d.dayOffset);
+    const { score: accessScore, stormPenalty } = calcForecastAccess(d.maxWind, parseFloat(d.maxSwell), parseFloat(d.maxSwellPeriod), currentSpecies, d.dayOffset);
     const raw   = Math.max(0, accessScore + sstScore + altScore + eacScore - stormPenalty);
     const final = Math.max(0, Math.min(12, Math.round(raw * mult)));
     return { ...d, accessScore, estimatedTotal: final };
   });
 
-  // Best day by final score
   let bestIdx = 0;
   scoredDays.forEach((d, i) => { if (d.estimatedTotal > scoredDays[bestIdx].estimatedTotal) bestIdx = i; });
 
   grid.innerHTML = '';
   scoredDays.forEach((day, i) => {
-    const score      = day.estimatedTotal;
+    // Today's tile uses the actual live score — not the forecast recalculation
+    const score      = (i === 0 && state.scores.finalTotal !== undefined)
+                       ? state.scores.finalTotal
+                       : day.estimatedTotal;
     const scoreClass = score >= 9 ? 'go'   : score >= 6 ? 'warn' : 'nogo';
     const dayClass   = score >= 9 ? 'best' : score >= 6 ? 'marginal' : 'poor';
 
@@ -3401,7 +3420,7 @@ function buildForecastBanner() {
   const mult     = SEASONAL_MULT[currentSpecies]?.[month] ?? 1;
 
   const scoredDays = days.map(d => {
-    const { score: accessScore, stormPenalty } = calcForecastAccess(d.maxWind, parseFloat(d.maxSwell), d.maxSwellPeriod, currentSpecies, d.dayOffset);
+    const { score: accessScore, stormPenalty } = calcForecastAccess(d.maxWind, parseFloat(d.maxSwell), parseFloat(d.maxSwellPeriod), currentSpecies, d.dayOffset);
     const raw   = Math.max(0, accessScore + sstScore + altScore + eacScore - stormPenalty);
     const final = Math.max(0, Math.min(12, Math.round(raw * mult)));
     return { ...d, accessScore, estimatedTotal: final };
@@ -3410,13 +3429,15 @@ function buildForecastBanner() {
   let bestIdx = 0;
   scoredDays.forEach((d, i) => { if (d.estimatedTotal > scoredDays[bestIdx].estimatedTotal) bestIdx = i; });
 
-  // Keep the "7 DAYS" label, clear the rest
   const label = banner.querySelector('span');
   banner.innerHTML = '';
   if (label) banner.appendChild(label);
 
   scoredDays.forEach((day, i) => {
-    const score  = day.estimatedTotal;
+    // Today's chip uses the actual live score
+    const score  = (i === 0 && state.scores.finalTotal !== undefined)
+                   ? state.scores.finalTotal
+                   : day.estimatedTotal;
     const isBest = i === bestIdx;
     const cls    = score >= 9 ? 'go' : score >= 6 ? 'warn' : 'nogo';
     const chip   = document.createElement('div');
@@ -3438,12 +3459,10 @@ function showForecastDetail(day, score) {
   const sp        = SPECIES[currentSpecies];
   const month     = new Date().getMonth();
   const mult      = SEASONAL_MULT[currentSpecies]?.[month] ?? 1;
-  const multPct   = Math.round(mult * 100);
   const seasonLbl = sp.seasonLabel(month);
 
-  // Recalculate access for this day so the detail panel always matches the grid
   const { score: accessScore, note: accessNote, stormPenalty } = calcForecastAccess(
-    day.maxWind, parseFloat(day.maxSwell), day.maxSwellPeriod, currentSpecies, day.dayOffset
+    day.maxWind, parseFloat(day.maxSwell), parseFloat(day.maxSwellPeriod), currentSpecies, day.dayOffset
   );
   const sstScore = state.scores.sst || 0;
   const altScore = state.scores.alt || 0;
@@ -3453,40 +3472,36 @@ function showForecastDetail(day, score) {
   const verdict      = score >= 9 ? 'GO' : score >= 6 ? 'CONDITIONAL GO' : score >= 3 ? 'NO-GO' : 'NO GO';
   const verdictColor = score >= 9 ? 'var(--go)' : score >= 6 ? 'var(--warn)' : 'var(--nogo)';
 
-  // Departure and turn-home suggestion based on day offset
-  // Tide phase can only be estimated heuristically (we don't have per-day tidal data)
-  const isWeekend = ['Sat','Sun'].includes(day.dayName);
-  const departSugg = accessScore >= 2
-    ? (isWeekend ? '0500–0530' : '0530–0600')
-    : (accessScore === 1 ? '0600 (monitor bar first)' : '—');
-  const turnHomeSugg = accessScore >= 2
-    ? (day.dayOffset <= 1 ? '1400' : '1300')
-    : (accessScore === 1 ? '1200' : '—');
+  const isWeekend    = ['Sat','Sun'].includes(day.dayName);
+  const departSugg   = accessScore >= 2 ? (isWeekend ? '0500–0530' : '0530–0600')
+                     : accessScore === 1 ? '0600 (check bar first)' : '—';
+  const turnHomeSugg = accessScore >= 2 ? (day.dayOffset <= 1 ? '1400' : '1300')
+                     : accessScore === 1 ? '1200' : '—';
 
-  // Scoring breakdown reasoning
-  const scoreBreakdown = [
-    { label: '01 — Access',     score: accessScore, note: accessNote },
-    { label: '02 — Water temp', score: sstScore,    note: `Held from today's fetch — SST ${(state.liveData?.sst_warm||'—')}°C` },
-    { label: '03 — Eddy/Tide',  score: altScore,    note: `Held from today's fetch` },
-    { label: '04 — Current',    score: eacScore,    note: `Held from today's fetch — EAC ${(state.liveData?.eac_speed||'—')}kt` },
-  ];
-
-  const pillarRows = scoreBreakdown.map(p => {
-    const cls = p.score === 3 ? 'var(--go)' : p.score >= 2 ? 'var(--warn)' : p.score === 1 ? 'var(--warn)' : 'var(--nogo)';
-    return `<tr>
-      <td style="font-family:var(--mono);font-size:12px;padding:6px 8px;color:var(--text-secondary)">${p.label}</td>
-      <td style="font-family:var(--mono);font-size:13px;padding:6px 8px;color:${cls};font-weight:700">${p.score}/3</td>
-      <td style="font-family:var(--mono);font-size:12px;padding:6px 8px;color:var(--text-secondary)">${p.note}</td>
-    </tr>`;
-  }).join('');
+  const windDirStr = day.windDirDom !== null
+    ? ` ${degreesToCompass(day.windDirDom)} (${day.windDirDom}°)` : '';
 
   const multNote = mult < 1
-    ? `<p style="margin:10px 0 0;font-size:12px;color:var(--text-secondary);font-family:var(--mono);">⚠ Seasonal modifier ×${mult} (${seasonLbl}) applied — raw ${rawScore}/12 → ${score}/12.</p>`
+    ? `<p style="margin:10px 0 0;font-size:12px;color:var(--text-secondary);font-family:var(--mono);">⚠ Seasonal modifier ×${mult} (${seasonLbl}) — raw ${rawScore}/12 → ${score}/12.</p>`
     : '';
 
   const tideNote = day.dayOffset === 0
-    ? `Today's tide: <strong>${document.getElementById('tideDirection')?.textContent || '—'}</strong> — see tide meter above.`
-    : `Tidal data for future days is not fetched. Check <a href="https://www.bom.gov.au/australia/tides/" target="_blank" style="color:var(--accent)">BOM Tides</a> for ${day.dayName} ${day.dayNum}.`;
+    ? `Today: <strong>${document.getElementById('tideDirection')?.textContent || '—'}</strong> — see tide meter above.`
+    : `Future tide data not fetched. Check <a href="https://www.bom.gov.au/australia/tides/" target="_blank" style="color:var(--accent)">BOM Tides</a> for ${day.dayName} ${day.dayNum}.`;
+
+  const pillarRows = [
+    { label: '01 — Access',     s: accessScore, note: accessNote },
+    { label: '02 — Water temp', s: sstScore,    note: `Held from today — SST ${state.liveData?.sst_warm ?? '—'}°C (EAC core)` },
+    { label: '03 — Eddy/Tide',  s: altScore,    note: `Held from today — SSH proxy ${state.liveData?.ssh ?? '—'}cm` },
+    { label: '04 — Current',    s: eacScore,    note: `Held from today — EAC ${state.liveData?.eac_speed ?? '—'}kt (${state.liveData?.eac_on_structure ?? '—'})` },
+  ].map(p => {
+    const c = p.s === 3 ? 'var(--go)' : p.s >= 1 ? 'var(--warn)' : 'var(--nogo)';
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:12px;padding:6px 8px;color:var(--text-secondary)">${p.label}</td>
+      <td style="font-family:var(--mono);font-size:13px;padding:6px 8px;color:${c};font-weight:700">${p.s}/3</td>
+      <td style="font-family:var(--mono);font-size:12px;padding:6px 8px;color:var(--text-secondary)">${p.note}</td>
+    </tr>`;
+  }).join('');
 
   document.getElementById('forecastDetail').innerHTML = `
     <div class="forecast-detail-title" style="margin-bottom:14px">
@@ -3494,11 +3509,10 @@ function showForecastDetail(day, score) {
       &nbsp;—&nbsp;
       <span style="color:${verdictColor};font-weight:700">${verdict} &nbsp;${score}/12</span>
     </div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
       <div style="background:var(--surface-2);border-radius:6px;padding:10px 14px">
         <div style="font-size:11px;color:var(--text-secondary);font-family:var(--mono);margin-bottom:4px">WIND FORECAST</div>
-        <div style="font-size:22px;font-weight:700;font-family:var(--mono)">${day.maxWind}kt</div>
+        <div style="font-size:22px;font-weight:700;font-family:var(--mono)">${day.maxWind}kt${windDirStr}</div>
         <div style="font-size:12px;color:var(--text-secondary);font-family:var(--mono)">gusts to ${day.maxGust}kt</div>
       </div>
       <div style="background:var(--surface-2);border-radius:6px;padding:10px 14px">
@@ -3507,20 +3521,15 @@ function showForecastDetail(day, score) {
         <div style="font-size:12px;color:var(--text-secondary);font-family:var(--mono)">${day.maxSwellPeriod}s period · wave ${day.maxWave}m</div>
       </div>
     </div>
-
     <table style="width:100%;border-collapse:collapse;margin-bottom:12px">
-      <thead>
-        <tr style="border-bottom:1px solid var(--border)">
-          <th style="text-align:left;font-size:11px;color:var(--text-secondary);font-family:var(--mono);padding:4px 8px">PILLAR</th>
-          <th style="text-align:left;font-size:11px;color:var(--text-secondary);font-family:var(--mono);padding:4px 8px">SCORE</th>
-          <th style="text-align:left;font-size:11px;color:var(--text-secondary);font-family:var(--mono);padding:4px 8px">BASIS</th>
-        </tr>
-      </thead>
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;font-size:11px;color:var(--text-secondary);font-family:var(--mono);padding:4px 8px">PILLAR</th>
+        <th style="text-align:left;font-size:11px;color:var(--text-secondary);font-family:var(--mono);padding:4px 8px">SCORE</th>
+        <th style="text-align:left;font-size:11px;color:var(--text-secondary);font-family:var(--mono);padding:4px 8px">BASIS</th>
+      </tr></thead>
       <tbody>${pillarRows}</tbody>
     </table>
-
     ${multNote}
-
     <div style="margin-top:14px;padding:10px 14px;background:var(--surface-2);border-radius:6px;border-left:3px solid var(--accent)">
       <div style="font-size:11px;color:var(--text-secondary);font-family:var(--mono);margin-bottom:6px">◈ TRIP PLAN</div>
       <div style="font-family:var(--mono);font-size:13px;line-height:1.8;color:var(--text-primary)">
@@ -3529,11 +3538,10 @@ function showForecastDetail(day, score) {
         <strong>Tide:</strong> ${tideNote}
       </div>
     </div>
-
     <p style="margin-top:12px;font-size:12px;color:var(--text-secondary);font-family:var(--mono);line-height:1.6">
-      Access score uses forecast wind/swell for ${day.dayName} ${day.dayNum}.
-      SST, eddy, and current pillars are held from today's fetch — re-fetch on the morning to update.
-      Forecast accuracy degrades beyond 3 days.
+      Access uses forecast wind/swell for ${day.dayName} ${day.dayNum}.
+      SST, eddy height, and current pillars held from today's fetch.
+      Re-fetch on the morning for updated readings. Forecast accuracy degrades beyond 3 days.
     </p>
   `;
 }
@@ -3621,7 +3629,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
     <table class="brief-table">
       <tr><th>Pillar</th><th>Parameter</th><th>Value</th><th>Score</th><th>Status</th></tr>
       <tr><td>Bar &amp; sea state</td><td>Wind</td><td>${d.wind}kt</td><td rowspan="2" style="vertical-align:middle;font-family:var(--mono);font-size:16px;font-weight:700;color:${access===3?'var(--go)':access>=2?'var(--warn)':'var(--nogo)'}">${access}/3</td><td>${windStatus}</td></tr>
-      <tr><td></td><td>Swell</td><td>${d.swell}m @ ${d.period}s</td><td>${swellStatus}</td></tr>
+      <tr><td></td><td>Swell</td><td>${d.swell}m @ ${d.swell_period}s</td><td>${swellStatus}</td></tr>
       <tr><td>Water temp &amp; colour</td><td>Warm/Cold</td><td>${d.sst_warm}°C / ${d.sst_cold}°C (Δ${d.sst_delta}°C)</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${sst===3?'var(--go)':sst>=2?'var(--warn)':'var(--nogo)'}">${sst}/3</td><td>${sstStatus}</td></tr>
       <tr><td>Warm core eddy</td><td>Eddy height</td><td>+${d.ssh.toFixed(1)}cm</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${alt===3?'var(--go)':alt>=2?'var(--warn)':'var(--nogo)'}">${alt}/3</td><td>${sshStatus}</td></tr>
       <tr><td>Current &amp; structure</td><td>Current speed</td><td>${d.eac_speed}kt</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${eac===3?'var(--go)':eac>=2?'var(--warn)':'var(--nogo)'}">${eac}/3</td><td>${eacStatus}</td></tr>
@@ -3678,7 +3686,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   // ── Risks ──
   const risks = [];
   if (d.wind > 12)           risks.push(`<strong>Wind:</strong> ${d.wind}kt is above the comfort threshold. Afternoon sea breeze may add another 5–8kt — plan to be off the grounds by 1300.`);
-  if (parseFloat(d.swell) > 2) risks.push(`<strong>Swell:</strong> ${d.swell}m @ ${d.period}s is heavy. The run home into a building sea will be slow and hard on the boat.`);
+  if (parseFloat(d.swell) > 2) risks.push(`<strong>Swell:</strong> ${d.swell}m @ ${d.swell_period}s is heavy. The run home into a building sea will be slow and hard on the boat.`);
   if (gap && gap > 25)        { const transitOnly = Math.round((gap / getBoatSpec().cruiseSpeed) * getBoatSpec().cruiseBurn * 2); risks.push(`<strong>Fuel:</strong> ${gap}nm is ~${transitOnly}L in transit alone before you've wet a line. Fuel discipline is critical — know your turn-home number.`); }
   if (reports === 'dead')     risks.push(`<strong>Bite:</strong> Recent reports are dead. Multiple failed runs suggest fish may have moved or conditions are suppressing feeding.`);
   if (total < 6)              risks.push(`<strong>ROI:</strong> The score doesn't justify the fuel bill. A bad day offshore costs the same as a good one.`);
@@ -3692,10 +3700,10 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
     rec += `A run is defensible for <strong>${sp.name}</strong> but not optimal. Identify the weak pillar, weigh it against the gap cost, and set a hard ${total >= 8 ? '1400' : '1300'} turn-home. If conditions are trending better tomorrow, wait.`;
   } else {
     const bestDay = state.forecastDays.reduce((best, d, i) => {
-      const { score: aScore, stormPenalty } = calcForecastAccess(d.maxWind, parseFloat(d.maxSwell), d.maxSwellPeriod, currentSpecies, d.dayOffset ?? i);
+      const { score: aScore, stormPenalty } = calcForecastAccess(d.maxWind, parseFloat(d.maxSwell), parseFloat(d.maxSwellPeriod), currentSpecies, d.dayOffset ?? i);
       const raw  = Math.max(0, aScore + (state.scores.sst||0) + (state.scores.alt||0) + (state.scores.eac||0) - stormPenalty);
       const mult = SEASONAL_MULT[currentSpecies]?.[new Date().getMonth()] ?? 1;
-      const s    = Math.round(raw * mult);
+      const s    = Math.max(0, Math.min(12, Math.round(raw * mult)));
       return s > best.score ? {day: d, score: s} : best;
     }, {day: state.forecastDays[0], score: 0});
     rec += `Score of ${total}/12 — not worth burning the fuel for <strong>${sp.name}</strong> today. ${bestDay.day ? `Best upcoming window: <strong>${bestDay.day.dayName} ${bestDay.day.dayNum}</strong> — ${bestDay.day.maxWind}kt wind, ${bestDay.day.maxSwell}m swell.` : 'Monitor and reforecast in 48hrs.'}`;
