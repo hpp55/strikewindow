@@ -1518,7 +1518,7 @@
     <button class="species-btn" data-species="kingfish" onclick="setSpecies('kingfish', this)">
       <span class="species-icon">🎯</span>
       <span class="species-name">Kingfish</span>
-      <span class="species-season">Apr–Sep</span>
+      <span class="species-season">Year round</span>
     </button>
     <button class="species-btn" data-species="snapper" onclick="setSpecies('snapper', this)">
       <span class="species-icon">🔴</span>
@@ -2452,7 +2452,7 @@ const SPECIES = {
     primaryTarget: 'Browns Mountain (~22nm ESE, 34°05\'S 151°40\'E) · 100–200m contour edge',
     secondaryTarget: '100–200m contour edge · The Peak (34°02\'S 151°26\'E) when warm water close',
     trollSpeed: '7–8kt across the colour change',
-    spread: 'Skirted lures + bibless minnows on the edge. Spread wide, 20–40m back. Work the eddy edge, not the glassy centre.',
+    spread: 'Trolling: JB Lures Dingo or TANTRUM Bullet in 6–9" skirts at 6–8kt. Add Halco Laser Pro 220 Deep Diver in King Brown pattern at the colour change. Trophy Hunter Profidgie 250mm hybrid plastic on the short corner when fish are fussy.<br>Stickbaiting: Maria Rerise or Nomad Riptide Fast Sinking cast into feeding fish on the surface. Keep the boat on the upwind edge of the school.',
     searchTerms: 'Sydney offshore yellowfin tuna fishing report',
     trollBurnMod: 1.0,
     defaultGap: 20,
@@ -2475,7 +2475,7 @@ const SPECIES = {
     primaryTarget: 'Browns Mountain (~22nm ESE) · 200m contour corridor · blue water edge 35–55nm',
     secondaryTarget: 'Botany Canyon rim (~12nm SE) — Striped Marlin and early season',
     trollSpeed: '8–10kt with teasers and dredges',
-    spread: 'Teasers + dredges + skirted lures. 15–25m spread. Target eddy edge, not eddy centre.',
+    spread: 'Trolling: TANTRUM Bullet or Pakula Cockroach 7–8" straight pushers at 6–8kt for Striped Marlin — better hook-up rate than aggressive slant-face heads. JB Lures Dingo for Black Marlin. Leader 250–300lb mono on 7–9" lures. Run a large teaser (12"+) to raise fish then switch to live bait or skipbait on a circle hook for best conversion.',
     searchTerms: 'Sydney offshore marlin fishing report blue water',
     trollBurnMod: 1.3,
     defaultGap: 35,
@@ -2497,7 +2497,7 @@ const SPECIES = {
     primaryTarget: 'FAD/Bait Station (~25nm ESE, 34°08\'S 151°44\'E) — primary Mahi mark when operational in 22°C+ water',
     secondaryTarget: 'Long Reef (~7nm) when warm water close · Shelf edge colour change + weed lines',
     trollSpeed: '7–9kt along current and debris lines',
-    spread: 'Small lures + flies near debris. Once hooked up, keep them in water — school follows.',
+    spread: 'Small skirted lures, feathers or skirts trolled at 6–8kt around FAD and debris lines. Cast small jigs or soft plastics once fish are located under the FAD. Switch to live yakkas hooked behind the dorsal fin for best conversion. Keep one fish in the water once hooked — cube aggressively to hold the school. Leader: 30–40lb fluorocarbon.',
     searchTerms: 'Sydney offshore mahi mahi dolphinfish fishing report',
     trollBurnMod: 1.0,
     defaultGap: 25,
@@ -2520,12 +2520,12 @@ const SPECIES = {
     primaryTarget: 'Long Reef (~7nm, 33°42\'S 151°21\'E) · The Peak (~9nm, 34°02\'S 151°26\'E) · 12 Mile Reef (~11nm)',
     secondaryTarget: 'FAD/Bait Station (~25nm) — larger fish · Botany Canyon rim',
     trollSpeed: '4–6kt slow troll or vertical jigging over structure',
-    spread: 'Knife jigs, slugs, live yellowtail or slimy mackerel. Current-facing edges. 20–30 min per mark. If tide is slack, WAIT.',
+    spread: 'Jigging: Slow-pitch knife jigs from Nomad, Oceans Legacy or Palms on the drop-off. Live squid, slimy mackerel or yellowtail on a running sinker at structure on moving tide. Maria Rapido 220mm or Heru Skipjack popper at dawn and dusk.',
     searchTerms: 'Sydney offshore kingfish yellowtail fishing report Long Reef 12 Mile',
     trollBurnMod: 0.7,
     defaultGap: 10,
-    seasonStatus: (m) => [2,3,4,8,9,10,11].includes(m) ? 'peak' : [5,6,7].includes(m) ? 'open' : 'closed',
-    seasonLabel: (m) => [2,3,4,8,9,10,11].includes(m) ? 'PEAK SEASON' : 'SEASON OPEN'
+    seasonStatus: (m) => [2,3,4,9,10,11].includes(m) ? 'peak' : 'open',
+    seasonLabel: (m) => [2,3,4,9,10,11].includes(m) ? 'PEAK SEASON' : 'YEAR ROUND'
   },
 
   snapper: {
@@ -2543,7 +2543,7 @@ const SPECIES = {
     primaryTarget: 'Long Reef (~7nm) · The Peak (~9nm) · 12 Mile Reef (~11nm) · Botany Canyon rim (~12nm)',
     secondaryTarget: 'Various unnamed structure 30–80m — confirm bait on sounder',
     trollSpeed: 'Anchored or slow drift — not trolling',
-    spread: 'Whole pilchards, squid, soft plastics on bottom paternoster. Berley lane down-current. Moving tide ONLY.',
+    spread: 'Fresh pilchards, squid, or pike on a paternoster rig at anchor on moving tide. Kaibura-style octopus jigs deadsticked off the bottom. Soft plastics on a Berkley Elevator jighead worked slowly — fish hit on the drop.',
     searchTerms: 'Sydney offshore snapper fishing report Botany Canyon Long Reef',
     trollBurnMod: 0.3,
     defaultGap: 10,
@@ -3007,8 +3007,6 @@ function updateVerdict() {
   const subEl   = document.getElementById('verdictSub');
 
   const status = sp.seasonStatus(month);
-
-  // Lowest-scoring pillar, species-aware tiebreak
   const d = state.liveData || {};
   const pillarScores = { access, sst, alt, eac };
   const minScore = Math.min(access, sst, alt, eac);
@@ -3031,7 +3029,6 @@ function updateVerdict() {
       : "current isn't stacking bait",
   };
   const weakFactor = weakFactorMap[weakKey];
-
   const returnWindow = { yft:'June', marlin:'November', mahi:'December', kingfish:null, snapper:null };
   const isOffSeason = status === 'closed' && returnWindow[currentSpecies];
 
@@ -3147,7 +3144,7 @@ function getSpeciesOverrides(speciesKey, month) {
     case 'kingfish':
       if (status === 'closed') {
         overrides.seasonWarning = true;
-        overrides.reason = `Kingfish are present but at reduced density outside Apr–Sep. Smaller fish and inconsistent biting. Score reflects conditions only.`;
+        overrides.reason = `Kingfish are present but at reduced density in winter months. Score reflects conditions only.`;
       }
       break;
 
@@ -3717,7 +3714,7 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   const risks = [];
   if (d.wind > 12)           risks.push(`<strong>Wind:</strong> ${d.wind}kt is above the comfort threshold. Afternoon sea breeze may add another 5–8kt — plan to be off the grounds by 1300.`);
   if (parseFloat(d.swell) > 2) risks.push(`<strong>Swell:</strong> ${d.swell}m @ ${d.swell_period}s is heavy. The run home into a building sea will be slow and hard on the boat.`);
-  if (gap && gap > 25)         { const transitOnly = Math.round((gap / getBoatSpec().cruiseSpeed) * getBoatSpec().cruiseBurn * 2); risks.push(`<strong>Fuel:</strong> ${gap}nm is ~${transitOnly}L in transit alone before you've wet a line. Fuel discipline is critical — know your turn-home number.`); }
+  if (gap && gap > 25)        { const transitOnly = Math.round((gap / getBoatSpec().cruiseSpeed) * getBoatSpec().cruiseBurn * 2); risks.push(`<strong>Fuel:</strong> ${gap}nm is ~${transitOnly}L in transit alone before you've wet a line. Fuel discipline is critical — know your turn-home number.`); }
   if (reports === 'dead')      risks.push(`<strong>Bite:</strong> Recent reports are dead. Multiple failed runs suggest fish may have moved or conditions are suppressing feeding.`);
   if (total < 6)               risks.push(`<strong>ROI:</strong> The score doesn't justify the fuel bill. A bad day offshore costs the same as a good one.`);
   const _warnMonths = new Date().toLocaleDateString('en-AU',{month:'long'}) + '–' + new Date(new Date().getFullYear(), new Date().getMonth()+1).toLocaleDateString('en-AU',{month:'long'});
