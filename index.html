@@ -2450,9 +2450,9 @@ const SPECIES = {
     pillar3: 'WCE edge within range — SLA +10cm+',
     pillar4: 'EAC proximity + current structure',
     primaryTarget: 'Browns Mountain (~22nm ESE, 34°05\'S 151°40\'E) · 100–200m contour edge',
-    secondaryTarget: '12 Mile Reef (~11nm) when warm water is close · FAD/Bait Station (~25nm, 34°08\'S 151°44\'E) Nov–Mar when SST ≥22°C only',
+    secondaryTarget: '100–200m contour edge · The Peak (34°02\'S 151°26\'E) when warm water close',
     trollSpeed: '7–8kt across the colour change',
-    spread: 'Trolling: JB Lures Dingo or TANTRUM Bullet in 6–9" skirts at 6–8kt. Add Halco Laser Pro 220 Deep Diver in King Brown pattern at the colour change. Trophy Hunter Profidgie 250mm hybrid plastic on the short corner when fish are fussy.<br>Stickbaiting: Maria Rerise or Nomad Riptide Fast Sinking cast into feeding fish on the surface. Keep the boat on the upwind edge of the school.',
+    spread: 'Skirted lures + bibless minnows on the edge. Spread wide, 20–40m back. Work the eddy edge, not the glassy centre.',
     searchTerms: 'Sydney offshore yellowfin tuna fishing report',
     trollBurnMod: 1.0,
     defaultGap: 20,
@@ -2472,10 +2472,10 @@ const SPECIES = {
     pillar2: 'Black: SST 24–27°C · Striped: 20–22°C · Blue water',
     pillar3: 'Warm core eddy within range — SLA +20cm+',
     pillar4: 'EAC core within 20nm · blue water at shelf edge',
-    primaryTarget: 'Browns Mountain (~22nm ESE) · FAD/Bait Station (~25nm) · 200m contour corridor',
+    primaryTarget: 'Browns Mountain (~22nm ESE) · 200m contour corridor · blue water edge 35–55nm',
     secondaryTarget: 'Botany Canyon rim (~12nm SE) — Striped Marlin and early season',
     trollSpeed: '8–10kt with teasers and dredges',
-    spread: 'Trolling: TANTRUM Bullet or Pakula Cockroach 7–8" straight pushers at 6–8kt for Striped Marlin — better hook-up rate than aggressive slant-face heads. JB Lures Dingo for Black Marlin. Leader 250–300lb mono on 7–9" lures. Run a large teaser (12"+) to raise fish then switch to live bait or skipbait on a circle hook for best conversion.',
+    spread: 'Teasers + dredges + skirted lures. 15–25m spread. Target eddy edge, not eddy centre.',
     searchTerms: 'Sydney offshore marlin fishing report blue water',
     trollBurnMod: 1.3,
     defaultGap: 35,
@@ -2497,7 +2497,7 @@ const SPECIES = {
     primaryTarget: 'FAD/Bait Station (~25nm ESE, 34°08\'S 151°44\'E) — primary Mahi mark when operational in 22°C+ water',
     secondaryTarget: 'Long Reef (~7nm) when warm water close · Shelf edge colour change + weed lines',
     trollSpeed: '7–9kt along current and debris lines',
-    spread: 'Small skirted lures, feathers or skirts trolled at 6–8kt around FAD and debris lines. Cast small jigs or soft plastics once fish are located under the FAD. Switch to live yakkas hooked behind the dorsal fin for best conversion. Keep one fish in the water once hooked — cube aggressively to hold the school. Leader: 30–40lb fluorocarbon.',
+    spread: 'Small lures + flies near debris. Once hooked up, keep them in water — school follows.',
     searchTerms: 'Sydney offshore mahi mahi dolphinfish fishing report',
     trollBurnMod: 1.0,
     defaultGap: 25,
@@ -2520,7 +2520,7 @@ const SPECIES = {
     primaryTarget: 'Long Reef (~7nm, 33°42\'S 151°21\'E) · The Peak (~9nm, 34°02\'S 151°26\'E) · 12 Mile Reef (~11nm)',
     secondaryTarget: 'FAD/Bait Station (~25nm) — larger fish · Botany Canyon rim',
     trollSpeed: '4–6kt slow troll or vertical jigging over structure',
-    spread: 'Jigging: Slow-pitch knife jigs from Nomad, Oceans Legacy or Palms on the drop-off. Live squid, slimy mackerel or yellowtail on a running sinker at structure on moving tide. Maria Rapido 220mm or Heru Skipjack popper at dawn and dusk.',
+    spread: 'Knife jigs, slugs, live yellowtail or slimy mackerel. Current-facing edges. 20–30 min per mark. If tide is slack, WAIT.',
     searchTerms: 'Sydney offshore kingfish yellowtail fishing report Long Reef 12 Mile',
     trollBurnMod: 0.7,
     defaultGap: 10,
@@ -2543,7 +2543,7 @@ const SPECIES = {
     primaryTarget: 'Long Reef (~7nm) · The Peak (~9nm) · 12 Mile Reef (~11nm) · Botany Canyon rim (~12nm)',
     secondaryTarget: 'Various unnamed structure 30–80m — confirm bait on sounder',
     trollSpeed: 'Anchored or slow drift — not trolling',
-    spread: 'Fresh pilchards, squid, or pike on a paternoster rig at anchor on moving tide. Kaibura-style octopus jigs deadsticked off the bottom. Soft plastics on a Berkley Elevator jighead worked slowly — fish hit on the drop.',
+    spread: 'Whole pilchards, squid, soft plastics on bottom paternoster. Berley lane down-current. Moving tide ONLY.',
     searchTerms: 'Sydney offshore snapper fishing report Botany Canyon Long Reef',
     trollBurnMod: 0.3,
     defaultGap: 10,
@@ -2614,8 +2614,13 @@ function setSpecies(speciesKey, btn) {
     buildForecastGrid();
     buildForecastBanner();
     updateSeasonContext(speciesKey);
-    // Regenerate brief immediately so it reflects the new species
-    runAnalysis();
+    // Regenerate brief immediately — no tab switch, no loading spinner
+    const _d = state.liveData;
+    const { access: _a, sst: _s, alt: _l, eac: _e, finalTotal: _ft } = state.scores;
+    const _t = (_ft !== undefined) ? _ft : (_a + _s + _l + _e);
+    document.getElementById('briefingIdle').style.display = 'none';
+    document.getElementById('briefingOutput').classList.add('visible');
+    generateLocalBrief(_t, _d, intel.gap||null, intel.bait||'', intel.reports||'', intel.colour||'', intel.hotspot||'');
   } else {
     // Data not yet loaded — trigger fetch which auto-runs analysis on complete
     updateSeasonContext(speciesKey);
@@ -2994,7 +2999,6 @@ function setPillar(name, score, note) {
 function updateVerdict() {
   const { access, sst, alt, eac, rawTotal, finalTotal, mult } = state.scores;
   const total = (finalTotal !== undefined) ? finalTotal : (access + sst + alt + eac);
-  const raw   = (rawTotal !== undefined)   ? rawTotal   : total;
   const sp = SPECIES[currentSpecies];
   const month = new Date().getMonth();
   const banner  = document.getElementById('verdictBanner');
@@ -3002,32 +3006,60 @@ function updateVerdict() {
   const callEl  = document.getElementById('verdictCall');
   const subEl   = document.getElementById('verdictSub');
 
-  const seasonLabel = sp.seasonLabel(month);
-  const multPct = mult !== undefined ? Math.round(mult * 100) : 100;
-  const seasonNote = mult !== undefined && mult < 1.0
-    ? ` Season modifier: ×${mult.toFixed(2)} (${seasonLabel}).`
-    : '';
+  const status = sp.seasonStatus(month);
 
-  // Normal scoring — seasonal multiplier already baked into finalTotal
+  // Lowest-scoring pillar, species-aware tiebreak
+  const d = state.liveData || {};
+  const pillarScores = { access, sst, alt, eac };
+  const minScore = Math.min(access, sst, alt, eac);
+  const priorityOrder = currentSpecies === 'snapper'
+    ? ['sst', 'alt', 'eac', 'access']
+    : currentSpecies === 'kingfish'
+    ? ['alt', 'access', 'sst', 'eac']
+    : ['access', 'sst', 'alt', 'eac'];
+  const weakKey = priorityOrder.find(k => pillarScores[k] === minScore) || 'access';
+  const weakFactorMap = {
+    access: `${d.wind || '—'}kt wind and ${d.swell || '—'}m swell`,
+    sst: currentSpecies === 'snapper'
+      ? `water is too warm — ${(d.sst_warm || '—')}°C is above the Snapper feeding range`
+      : 'water temp and colour change are weak',
+    alt: (currentSpecies === 'snapper' || currentSpecies === 'kingfish')
+      ? "tide isn't moving"
+      : 'eddy structure is soft',
+    eac: currentSpecies === 'snapper'
+      ? "fish aren't aggregated yet"
+      : "current isn't stacking bait",
+  };
+  const weakFactor = weakFactorMap[weakKey];
+
+  const returnWindow = { yft:'June', marlin:'November', mahi:'December', kingfish:null, snapper:null };
+  const isOffSeason = status === 'closed' && returnWindow[currentSpecies];
+
   scoreEl.innerHTML = total + '<span>/12</span>';
   banner.className = 'verdict-banner';
 
   if (total >= 9) {
     banner.classList.add('state-go');
     callEl.textContent = 'STRIKE — GO';
-    subEl.textContent = `Score ${total}/12 — conditions stacked for ${sp.name}.${seasonNote} Get the spread out.`;
+    subEl.textContent = 'Conditions are stacked. Get out there.';
   } else if (total >= 6) {
     banner.classList.add('state-marginal');
     callEl.textContent = 'CONDITIONAL GO';
-    subEl.textContent = `Score ${total}/12 — workable. Identify the weak pillar before committing fuel.${seasonNote}`;
+    subEl.textContent = isOffSeason
+      ? `Off season. Come back ${returnWindow[currentSpecies]}.`
+      : `Worth the run — ${weakFactor}. Know your turn-home before you leave.`;
   } else if (total >= 3) {
     banner.classList.add('state-nogo');
     callEl.textContent = 'PULL THE PIN';
-    subEl.textContent = `Score ${total}/12 — not worth the fuel. Check back in 24–48hrs.${seasonNote}`;
+    subEl.textContent = isOffSeason
+      ? `Off season. Come back ${returnWindow[currentSpecies]}.`
+      : `Leave her on the trailer. ${weakFactor}. Check back in 48hrs.`;
   } else {
     banner.classList.add('state-nogo');
     callEl.textContent = 'NO GO';
-    subEl.textContent = `Score ${total}/12 — conditions not suitable for ${sp.name} today.${seasonNote} Leave her on the trailer.`;
+    subEl.textContent = isOffSeason
+      ? `Off season. Come back ${returnWindow[currentSpecies]}.`
+      : `Not today. ${weakFactor}. Don't burn the fuel.`;
   }
 }
 
@@ -3585,14 +3617,18 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
     assessment += `All four pillars are firing. The ${d.sst_delta.toFixed(1)}°C SST wall, +${d.ssh.toFixed(0)}cm SSH anomaly, and ${d.wind}kt wind with ${d.swell}m swell all stack in your favour today. This is a Plan A day — execute it.`;
   } else if (total >= 6) {
     const weakPillar = [
-      access < 2 ? `Access (${d.wind}kt / ${d.swell}m — marginal sea state)` : null,
-      sst < 2    ? `Colour change weak (${d.sst_delta.toFixed(1)}°C gradient — bait won't be concentrated)` : null,
-      alt < 2    ? `Warm core eddy (+${d.ssh.toFixed(0)}cm — eddy's soft, not the wall you want)` : null,
-      eac < 2    ? `Current (${d.eac_speed}kt — not pushing hard enough to stack bait)` : null
+      access < 2 ? `${d.wind}kt / ${d.swell}m sea state is the limiting factor` : null,
+      sst < 2    ? (currentSpecies === 'snapper' ? `${d.sst_warm}°C — water is too warm for Snapper, fish are deeper` : `${d.sst_delta.toFixed(1)}°C gradient — colour change is weak, bait won't be concentrated`) : null,
+      alt < 2    ? ((currentSpecies === 'snapper' || currentSpecies === 'kingfish') ? 'tide isn\'t running — wait for the move' : `+${d.ssh.toFixed(0)}cm eddy height — structure is soft`) : null,
+      eac < 2    ? (currentSpecies === 'snapper' ? 'fish aren\'t aggregated yet' : `${d.eac_speed}kt current — not pushing hard enough to stack bait`) : null
     ].filter(Boolean);
-    assessment += `${weakPillar.length > 0 ? `${weakPillar[0]} is the weak link` : 'Not all pillars are stacked'}. It's a go if you're happy with the risk — but it's not a high-confidence day. Know your turn-home time before you leave the ramp.`;
+    const weakStr = weakPillar.length > 0 ? weakPillar[0] : 'not every condition is dialled in';
+    assessment += `Worth the run — ${weakStr}. Know your turn-home before you leave the ramp.`;
   } else {
-    assessment += `Not worth the fuel today. ${access === 0 ? `${d.wind}kt and ${d.swell}m — leave her on the trailer.` : `Water's cold and the EAC isn't stacking. Nothing out there to find right now.`} Check back in 48hrs — conditions are moving.`;
+    const pinReason = access === 0
+      ? `${d.wind}kt and ${d.swell}m — too rough`
+      : (currentSpecies === 'snapper' ? `${d.sst_warm}°C — water is too warm for Snapper` : 'water temp and current aren\'t there');
+    assessment += `Leave her on the trailer. ${pinReason}. Check back in 48hrs.`;
   }
 
   // Skipper intel modifiers
@@ -3606,26 +3642,35 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
   if (reports === 'dead')     intelNotes.push('Trip reports: Dead. Recent runs have been unsuccessful — caution.');
   if (localKnow) intelNotes.push(`Local intel: "${localKnow}"`);
   if (intelNotes.length) assessment += `<br><br><em style="color:var(--text-secondary)">${intelNotes.join(' ')}</em>`;
+
+  // ── Conditions table ──
+  const windStatus  = d.wind <= 12  ? '✓ Ideal'       : d.wind <= 15  ? '⚠ Marginal'   : '✗ Too strong';
+  const swellStatus = parseFloat(d.swell) <= 1.5 ? '✓ Comfortable' : parseFloat(d.swell) <= 2.0 ? '⚠ Workable' : '✗ Heavy';
+  const sstStatus   = d.sst_delta >= 3 ? '✓ Hard wall'   : d.sst_delta >= 2 ? '⚠ Soft gradient' : '✗ Flat';
+  const sshStatus   = d.ssh >= 20  ? '✓ Eddy confirmed' : d.ssh >= 10 ? '⚠ Soft eddy'  : '✗ No eddy structure';
+  const eacStatus   = d.eac_speed >= 2 ? '✓ Active flow' : d.eac_speed >= 1.5 ? '⚠ Marginal' : '✗ Absent';
   const spGap = SPECIES[currentSpecies].defaultGap;
+  const gapStatus = !gap ? '— Not entered'
+    : gap <= spGap * 0.8  ? `✓ ${gap}nm — strong ROI`
+    : gap <= spGap * 1.2  ? `⚠ ${gap}nm — typical range`
+    : `✗ ${gap}nm — long run, check fuel`;
+
+  const conditionsTable = `
+    <table class="brief-table">
+      <tr><th>Pillar</th><th>Parameter</th><th>Value</th><th>Score</th><th>Status</th></tr>
+      <tr><td>Bar &amp; sea state</td><td>Wind</td><td>${d.wind}kt</td><td rowspan="2" style="vertical-align:middle;font-family:var(--mono);font-size:16px;font-weight:700;color:${access===3?'var(--go)':access>=2?'var(--warn)':'var(--nogo)'}">${access}/3</td><td>${windStatus}</td></tr>
+      <tr><td></td><td>Swell</td><td>${d.swell}m @ ${d.swell_period}s</td><td>${swellStatus}</td></tr>
+      <tr><td>Water temp &amp; colour</td><td>Warm/Cold</td><td>${d.sst_warm}°C / ${d.sst_cold}°C (Δ${d.sst_delta}°C)</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${sst===3?'var(--go)':sst>=2?'var(--warn)':'var(--nogo)'}">${sst}/3</td><td>${sstStatus}</td></tr>
+      <tr><td>Warm core eddy</td><td>Eddy height</td><td>+${d.ssh.toFixed(1)}cm</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${alt===3?'var(--go)':alt>=2?'var(--warn)':'var(--nogo)'}">${alt}/3</td><td>${sshStatus}</td></tr>
+      <tr><td>Current &amp; structure</td><td>Current speed</td><td>${d.eac_speed}kt</td><td style="font-family:var(--mono);font-size:16px;font-weight:700;color:${eac===3?'var(--go)':eac>=2?'var(--warn)':'var(--nogo)'}">${eac}/3</td><td>${eacStatus}</td></tr>
+      <tr><td colspan="2">Gap to warm water</td><td colspan="2">${gap ? gap + 'nm (~' + Math.round((gap / getBoatSpec().cruiseSpeed) * getBoatSpec().cruiseBurn * 2) + 'L return transit)' : 'Not entered'}</td><td>${gapStatus}</td></tr>
+    </table>`;
 
   // ── Target zone ──
   const sp = SPECIES[currentSpecies];
   let target = '';
   if (total >= 6) {
-    // YFT: FAD only appears in secondary when month is Nov–Mar AND SST >= 22°C
-    let primaryTarget  = sp.primaryTarget;
-    let secondaryTarget = sp.secondaryTarget;
-    if (currentSpecies === 'yft') {
-      const month2 = new Date().getMonth();
-      const isFADMonths = [0,1,2,10,11].includes(month2);
-      const sst2 = state.liveData?.sst_warm || 0;
-      if (isFADMonths && sst2 >= 22) {
-        secondaryTarget = '12 Mile Reef (~11nm) when warm water is close · FAD/Bait Station (~25nm, 34°08\'S 151°44\'E) — worth checking in these conditions';
-      } else {
-        secondaryTarget = '12 Mile Reef (~11nm) when warm water is close · Shelf edge colour change at 100–200m';
-      }
-    }
-    target = `<strong>Primary:</strong> ${primaryTarget}.<br><strong>Secondary:</strong> ${secondaryTarget}.<br><br>${sp.spread}`;
+    target = `<strong>Primary:</strong> ${sp.primaryTarget}.<br><strong>Secondary:</strong> ${sp.secondaryTarget}.<br><br>${sp.spread}`;
     if (bait === 'heavy' || bait === 'moderate') {
       target += `<br><br>Bait marks reported — prioritise staying near the aggregation over covering water.`;
     }
@@ -3670,12 +3715,12 @@ function generateLocalBrief(total, d, gap, bait, reports, colour, localKnow) {
 
   // ── Risks ──
   const risks = [];
-  if (d.wind > 12)             risks.push(`<strong>Wind:</strong> ${d.wind}kt is above the comfort threshold. Afternoon sea breeze may add another 5–8kt — plan to be off the grounds by 1300.`);
+  if (d.wind > 12)           risks.push(`<strong>Wind:</strong> ${d.wind}kt is above the comfort threshold. Afternoon sea breeze may add another 5–8kt — plan to be off the grounds by 1300.`);
   if (parseFloat(d.swell) > 2) risks.push(`<strong>Swell:</strong> ${d.swell}m @ ${d.swell_period}s is heavy. The run home into a building sea will be slow and hard on the boat.`);
   if (gap && gap > 25)         { const transitOnly = Math.round((gap / getBoatSpec().cruiseSpeed) * getBoatSpec().cruiseBurn * 2); risks.push(`<strong>Fuel:</strong> ${gap}nm is ~${transitOnly}L in transit alone before you've wet a line. Fuel discipline is critical — know your turn-home number.`); }
   if (reports === 'dead')      risks.push(`<strong>Bite:</strong> Recent reports are dead. Multiple failed runs suggest fish may have moved or conditions are suppressing feeding.`);
   if (total < 6)               risks.push(`<strong>ROI:</strong> The score doesn't justify the fuel bill. A bad day offshore costs the same as a good one.`);
-  const _warnMonths = new Date().toLocaleDateString('en-AU', { month: 'long' }) + '–' + new Date(new Date().getFullYear(), new Date().getMonth() + 1).toLocaleDateString('en-AU', { month: 'long' });
+  const _warnMonths = new Date().toLocaleDateString('en-AU',{month:'long'}) + '–' + new Date(new Date().getFullYear(), new Date().getMonth()+1).toLocaleDateString('en-AU',{month:'long'});
   risks.push(`<strong>Weather window:</strong> Always check BOM forecast immediately before departure. Conditions can shift fast in ${_warnMonths}.`);
 
   // ── Render ──
