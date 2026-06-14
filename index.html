@@ -2307,7 +2307,7 @@ async function fetchLiveData() {
       windGust:        Math.round(windGust),
       swell:           parseFloat(swellH || waveH).toFixed(1),
       // swell_period: canonical field name used by scoreMatrix and calcForecastAccess
-      swell_period:    parseFloat(swellP).toFixed(1),
+      swell_period:    parseFloat(parseFloat(swellP).toFixed(1)),
       wind_max_24h:    Math.round(windMax24h),
       sst_warm, sst_cold, sst_delta,
       ssh, eac_speed,
@@ -2737,7 +2737,7 @@ function scoreMatrix() {
   const postStormPenalty = recentMaxWind >= 25 ? 1 : 0; // subtract 1 from raw total
 
   // Swell period penalty: period <8s = steep uncomfortable wind swell
-  const swellPeriod = d.swell_period || 10; // default 10s if not available
+  const swellPeriod = parseFloat(d.swell_period) || 10; // default 10s if not available
   const shortPeriodPenalty = swellPeriod < 8 && parseFloat(d.swell) > 1.0 ? 1 : 0;
 
   // Thunderstorm override: WMO code 95–99 forces access to 0 regardless of wind/swell
