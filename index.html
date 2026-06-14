@@ -2222,19 +2222,17 @@ async function fetchLiveData() {
     // Hourly surface_pressure with past 6 hours for pressure trend calculation
     const windHourlyUrl  = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=surface_pressure&timezone=Australia/Sydney&forecast_days=1&past_hours=6`;
 
-    const [marineCurrentRes, marineDailyRes, windCurrentRes, windDailyRes, windHourlyRes] = await Promise.all([
+    const [marineCurrentRes, marineDailyRes, windCurrentRes, windDailyRes] = await Promise.all([
       fetch(marineCurrentUrl),
       fetch(marineDailyUrl),
       fetch(windCurrentUrl),
-      fetch(windDailyUrl),
-      fetch(windHourlyUrl)
+      fetch(windDailyUrl)
     ]);
 
     const marineCurrent = await marineCurrentRes.json();
     const marineDaily   = await marineDailyRes.json();
     const windCurrent   = await windCurrentRes.json();
     const windDaily     = await windDailyRes.json();
-    const windHourly    = await windHourlyRes.json();
 
     setStatus('src-marine', 'ok');
     setStatus('src-wind', 'ok');
@@ -2261,16 +2259,7 @@ async function fetchLiveData() {
 
     // Pressure trend: hourly array has 6 past hours then current hour onward
     // Index 0 = 6 hours ago, index 6 = current hour
-    const pressureArr = windHourly.hourly?.surface_pressure ?? [];
-    let pressureTrend = 'steady';
-    if (pressureArr.length >= 7) {
-      const oldest = pressureArr[0];   // 6 hours ago
-      const current = pressureArr[6];  // current hour
-      if (oldest != null && current != null) {
-        const delta = current - oldest;
-        pressureTrend = delta >= 1 ? 'rising' : delta <= -1 ? 'falling' : 'steady';
-      }
-    }
+    // pressureTrend calculated below in isolated fetch
 
     // SST: use EAC-core coord (-33.5, 153.5) as warm point — gives meaningful delta vs inshore
     // Cold point: inshore shelf (-34.5, 151.2) — upwelling zone, consistently cooler
@@ -2329,7 +2318,7 @@ async function fetchLiveData() {
       weatherCode,
       cloudCover,
       pressure,
-      pressureTrend,
+      pressureTrend: 'steady',
       visibility,
       forecastDays
     };
@@ -2346,6 +2335,19 @@ async function fetchLiveData() {
 
     document.getElementById('liveStatusDot').classList.add('live');
     document.getElementById('liveStatusText').textContent = 'Live — ' + new Date().toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
+
+    // Pressure trend — isolated so failure cannot block state.fetched = true
+    try {
+      const windHourlyUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=surface_pressure&timezone=Australia/Sydney&forecast_days=1&past_hours=6`;
+      const windHourlyData = await fetch(windHourlyUrl).then(r => r.json());
+      const pressureArr = windHourlyData.hourly?.surface_pressure ?? [];
+      if (pressureArr.length >= 7 && pressureArr[0] != null && pressureArr[6] != null) {
+        const delta = pressureArr[6] - pressureArr[0];
+        state.liveData.pressureTrend = delta >= 1 ? 'rising' : delta <= -1 ? 'falling' : 'steady';
+      }
+    } catch (pressureErr) {
+      console.warn('Pressure trend fetch failed (non-fatal):', pressureErr.message);
+    }
 
     state.fetched = true;
     // Auto-run analysis — no button press needed
