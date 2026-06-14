@@ -1589,6 +1589,26 @@
           <div class="live-metric-value" id="m-water">—</div>
           <div class="live-metric-unit">°C coastal</div>
         </div>
+        <div class="live-metric">
+          <div class="live-metric-label">Weather</div>
+          <div class="live-metric-value" id="m-weather" style="font-size:13px">—</div>
+          <div class="live-metric-unit">conditions</div>
+        </div>
+        <div class="live-metric">
+          <div class="live-metric-label">Pressure</div>
+          <div class="live-metric-value" id="m-pressure" style="font-size:12px">—</div>
+          <div class="live-metric-unit">hPa</div>
+        </div>
+        <div class="live-metric">
+          <div class="live-metric-label">Rain</div>
+          <div class="live-metric-value" id="m-precip">—</div>
+          <div class="live-metric-unit">chance</div>
+        </div>
+        <div class="live-metric" id="m-vis-tile" style="display:none">
+          <div class="live-metric-label">Visibility</div>
+          <div class="live-metric-value" id="m-visibility" style="font-size:13px">—</div>
+          <div class="live-metric-unit">reduced</div>
+        </div>
       </div>
     </div>
 
@@ -2195,22 +2215,26 @@ async function fetchLiveData() {
     const marineCurrentUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${LAT}&longitude=${LON}&current=wave_height,swell_wave_height,swell_wave_period&timezone=Australia/Sydney`;
     const marineDailyUrl   = `https://marine-api.open-meteo.com/v1/marine?latitude=${LAT}&longitude=${LON}&daily=wave_height_max,swell_wave_height_max,swell_wave_period_max&timezone=Australia/Sydney&forecast_days=7`;
 
-    updateLoadingStep('Fetching wind forecast...');
-    const windCurrentUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kn&timezone=Australia/Sydney`;
+    updateLoadingStep('Fetching wind & weather...');
+    const windCurrentUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation_probability,weather_code,cloud_cover,surface_pressure,visibility&wind_speed_unit=kn&timezone=Australia/Sydney`;
     // Add wind_direction_10m_dominant to daily for forecast detail panel
     const windDailyUrl   = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,precipitation_sum&wind_speed_unit=kn&timezone=Australia/Sydney&forecast_days=7`;
+    // Hourly surface_pressure with past 6 hours for pressure trend calculation
+    const windHourlyUrl  = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=surface_pressure&timezone=Australia/Sydney&forecast_days=1&past_hours=6`;
 
-    const [marineCurrentRes, marineDailyRes, windCurrentRes, windDailyRes] = await Promise.all([
+    const [marineCurrentRes, marineDailyRes, windCurrentRes, windDailyRes, windHourlyRes] = await Promise.all([
       fetch(marineCurrentUrl),
       fetch(marineDailyUrl),
       fetch(windCurrentUrl),
-      fetch(windDailyUrl)
+      fetch(windDailyUrl),
+      fetch(windHourlyUrl)
     ]);
 
     const marineCurrent = await marineCurrentRes.json();
     const marineDaily   = await marineDailyRes.json();
     const windCurrent   = await windCurrentRes.json();
     const windDaily     = await windDailyRes.json();
+    const windHourly    = await windHourlyRes.json();
 
     setStatus('src-marine', 'ok');
     setStatus('src-wind', 'ok');
@@ -2227,6 +2251,26 @@ async function fetchLiveData() {
     // Today's forecast max wind — best available proxy for storm penalty
     // (Open-Meteo doesn't expose hourly history)
     const windMax24h = windDaily.daily?.wind_speed_10m_max?.[0] ?? windSpd;
+
+    // Weather / atmospheric fields
+    const precipProbability = Math.round(windCurrent.current?.precipitation_probability ?? 0);
+    const weatherCode       = Math.round(windCurrent.current?.weather_code ?? 0);
+    const cloudCover        = Math.round(windCurrent.current?.cloud_cover ?? 0);
+    const pressure          = parseFloat((windCurrent.current?.surface_pressure ?? 1013).toFixed(1));
+    const visibility        = Math.round(windCurrent.current?.visibility ?? 10000);
+
+    // Pressure trend: hourly array has 6 past hours then current hour onward
+    // Index 0 = 6 hours ago, index 6 = current hour
+    const pressureArr = windHourly.hourly?.surface_pressure ?? [];
+    let pressureTrend = 'steady';
+    if (pressureArr.length >= 7) {
+      const oldest = pressureArr[0];   // 6 hours ago
+      const current = pressureArr[6];  // current hour
+      if (oldest != null && current != null) {
+        const delta = current - oldest;
+        pressureTrend = delta >= 1 ? 'rising' : delta <= -1 ? 'falling' : 'steady';
+      }
+    }
 
     // SST: use EAC-core coord (-33.5, 153.5) as warm point — gives meaningful delta vs inshore
     // Cold point: inshore shelf (-34.5, 151.2) — upwelling zone, consistently cooler
@@ -2280,6 +2324,13 @@ async function fetchLiveData() {
       ssh, eac_speed,
       eac_on_structure,
       water_temp: parseFloat(sst_cold).toFixed(1),  // coastal water temp for display
+      // Atmospheric / weather
+      precipProbability,
+      weatherCode,
+      cloudCover,
+      pressure,
+      pressureTrend,
+      visibility,
       forecastDays
     };
 
@@ -2404,6 +2455,20 @@ function degreesToCompass(deg) {
   return dirs[Math.round(deg / 22.5) % 16];
 }
 
+function wmoToText(code) {
+  if (code === 0 || code === 1)        return 'Clear';
+  if (code === 2)                      return 'Partly cloudy';
+  if (code === 3)                      return 'Overcast';
+  if (code >= 45 && code <= 48)       return 'Fog';
+  if (code >= 51 && code <= 57)       return 'Drizzle';
+  if (code >= 61 && code <= 67)       return 'Rain';
+  if (code >= 71 && code <= 77)       return 'Snow';
+  if (code >= 80 && code <= 82)       return 'Showers';
+  if (code === 85 || code === 86)     return 'Snow showers';
+  if (code >= 95 && code <= 99)       return 'Thunderstorm';
+  return 'Unknown';
+}
+
 function updateMetrics() {
   const d = state.liveData;
   if (!d) return;
@@ -2414,6 +2479,28 @@ function updateMetrics() {
   setMetric('m-sst', d.sst_warm + '°');
   setMetric('m-ssh', '+' + d.ssh.toFixed(1) + 'cm');
   setMetric('m-water', d.water_temp + '°');
+
+  // Weather fields
+  if (d.weatherCode != null) {
+    setMetric('m-weather', wmoToText(d.weatherCode));
+  }
+  if (d.pressure != null) {
+    const trendArrow = d.pressureTrend === 'rising'  ? ' ↑ Rising'
+                     : d.pressureTrend === 'falling' ? ' ↓ Falling'
+                     : ' → Steady';
+    setMetric('m-pressure', d.pressure + 'hPa' + trendArrow);
+  }
+  if (d.precipProbability != null) {
+    setMetric('m-precip', d.precipProbability + '%');
+  }
+  // Visibility: only show tile when below 5000m
+  const visTile = document.getElementById('m-vis-tile');
+  if (d.visibility != null && d.visibility < 5000) {
+    setMetric('m-visibility', (d.visibility / 1000).toFixed(1) + 'km');
+    if (visTile) visTile.style.display = '';
+  } else {
+    if (visTile) visTile.style.display = 'none';
+  }
 }
 
 function setMetric(id, val) {
@@ -2651,6 +2738,9 @@ function scoreMatrix() {
   // Swell period penalty: period <8s = steep uncomfortable wind swell
   const swellPeriod = d.swell_period || 10; // default 10s if not available
   const shortPeriodPenalty = swellPeriod < 8 && parseFloat(d.swell) > 1.0 ? 1 : 0;
+
+  // Thunderstorm override: WMO code 95–99 forces access to 0 regardless of wind/swell
+  const isThunderstorm = (d.weatherCode != null && d.weatherCode >= 95);
 
   // ── PILLAR 1: Access / Sea State ──
   let access = 0, accessNote = '';
@@ -2951,6 +3041,12 @@ function scoreMatrix() {
   // Reports modifier
   if (reports === 'red-hot')  { eac = Math.min(3, eac + 1); eacNote += ' ✓ Reports: Red hot.'; }
   if (reports === 'dead')     { eac = Math.max(0, eac - 1); eacNote += ' Reports: Dead.'; }
+
+  // Thunderstorm override: force access to 0 regardless of wind/swell
+  if (isThunderstorm) {
+    access = 0;
+    accessNote = 'Thunderstorm — do not launch.';
+  }
 
   // ── APPLY UNIVERSAL PENALTIES ──
   let rawTotal = access + sst + alt + eac;
@@ -3573,7 +3669,7 @@ function showForecastDetail(day, score) {
 // ANALYSIS — FULLY LOCAL, NO API NEEDED
 // ═══════════════════════════════════════
 function runAnalysis() {
-  if (!state.fetched) { alert('Fetch live data first.'); return; }
+  if (!state.fetched) { return; } // Silent return — fetch is automatic
 
   // Recalculate scores for current species before generating brief
   // This ensures banner and brief always match when species is switched
