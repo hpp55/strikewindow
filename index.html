@@ -2349,19 +2349,18 @@ async function fetchLiveData() {
       console.warn('Pressure trend fetch failed (non-fatal):', pressureErr.message);
     }
 
+    // Set fetched flag — must be here, after pressure try/catch, still inside outer try
     state.fetched = true;
-    // Auto-run analysis — no button press needed
     runAnalysis();
 
   } catch(e) {
-    console.error(e);
+    console.error('[Strike Window] Fetch error:', e);
     setStatus('src-marine', 'err');
     setStatus('src-wind', 'err');
-    // Show specific error message
-    const msg = e.message.includes('Failed to fetch')
-      ? 'Network error — make sure you are running Strike Window via the launch script (not opened directly as a file).\n\nIn Terminal run:\ncd "/Users/hamishpollitt/Desktop/Project Strikewindow/StrikeWindow_Foundation/app" && python3 -m http.server 8765'
-      : 'Data fetch failed: ' + e.message;
-    alert(msg);
+    const verdictCall = document.getElementById('verdictCall');
+    const verdictSub = document.getElementById('verdictSub');
+    if (verdictCall) verdictCall.textContent = 'DATA UNAVAILABLE';
+    if (verdictSub) verdictSub.textContent = 'Data fetch failed: ' + e.message + ' — tap Refresh to try again.';
   }
 
   showLoading(false);
